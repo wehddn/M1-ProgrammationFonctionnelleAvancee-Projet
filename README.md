@@ -13,6 +13,8 @@ La mailing-list dédiée à ce cours est `pfa-forum@listes.univ-paris-diderot.fr
 
 ### Cours
 
+Les Lundi 16h-18h, salle 153 (Olympe de Gouges), à partir du 16/1
+
 ### Examen
 
 ### Projet
