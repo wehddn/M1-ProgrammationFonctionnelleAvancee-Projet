@@ -17,6 +17,7 @@ Lundi 16h-18h, salle 153 (Olympe de Gouges), à partir du 16/1
 
 - cours 0 : Introduction, rappels OCaml. [pdf](cours/cours0.handout.pdf), [pdf 4-par-page](cours/cours0.handout4.pdf), [fichiers exemples](cours/cours0.examples).
 - cours 1 : Modules OCaml. [pdf](cours/cours1.handout.pdf), [pdf 4-par-page](cours/cours1.handout4.pdf), [fichiers exemples](cours/cours1.examples).
+- cours 2 : Zippers. [pdf](cours/cours2.handout.pdf), [pdf 4-par-page](cours/cours2.handout4.pdf), [fichiers exemples](cours/cours2.examples).
 
 ### Examen
 
