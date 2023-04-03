@@ -13,7 +13,9 @@ La mailing-list dédiée à ce cours est `pfa-forum@listes.univ-paris-diderot.fr
 
 ### Cours
 
-Lundi 16h-18h, salle 153 (Olympe de Gouges), à partir du 16/1
+Lundi 16h-18h, salle 153 (Olympe de Gouges), à partir du 16/1. En
+remplacement du lundi 10/4 férié, **une dernière séance de cours aura
+lieu le lundi 17/4**.
 
 - cours 0 : Introduction, rappels OCaml. [pdf](cours/cours0.handout.pdf), [pdf 4-par-page](cours/cours0.handout4.pdf), [fichiers exemples](cours/cours0.examples).
 - cours 1 : Modules OCaml. [pdf](cours/cours1.handout.pdf), [pdf 4-par-page](cours/cours1.handout4.pdf), [fichiers exemples](cours/cours1.examples).
@@ -39,6 +41,8 @@ seconde moitié du cours 6 sur le Hashconsing.
 Voir [projet/README.md](projet/README.md)
 
 ### TP
+
+**Dernier TP prévu le vendredi 14/4**.
 
 Les premiers TP se feront sur http://pfav.ddns.net , une instance de la plateforme **LearnOCaml** dédiée à ce cours :
 - A la première connexion, utilisez un identifiant de votre choix (de préférence votre nom, pour faciliter le suivi)
