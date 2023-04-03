@@ -31,6 +31,8 @@ lieu le lundi 17/4**.
 
 ### Examen
 
+**Le Mardi 16 mai 9h-11h30 en salle 247E**.
+
 Les portions de cours non traitées pendant les séances du lundi soir
 ne seront pas au programme de l'examen. C'est le cas par exemple de la
 seconde moitié du cours 6 sur le Hashconsing.
