@@ -22,8 +22,17 @@ Lundi 16h-18h, salle 153 (Olympe de Gouges), à partir du 16/1
 - cours 4 : Evaluation paresseuse. [pdf](cours/cours4.handout.pdf), [pdf 4-par-page](cours/cours4.handout4.pdf), [fichiers exemples](cours/cours4.examples).
 - cours 5 : Queues revisitées, les vertues de la paresse. [pdf](cours/cours5.handout.pdf), [pdf 4-par-page](cours/cours5.handout4.pdf), [fichiers exemples](cours/cours5.examples).
 - cours 6 : Hashconsing. [pdf](cours/cours6.handout.pdf), [pdf 4-par-page](cours/cours6.handout4.pdf), [fichiers exemples](cours/cours6.examples).
+- cours 7 (à lire chez vous) : typage OCaml et inférence. [pdf](cours/cours7.handout.pdf), [pdf 4-par-page](cours/cours7.handout4.pdf), [fichiers exemples](cours/cours7.examples).
+- cours 8 : variants polymorphes et sous-typage. [pdf](cours/cours8.handout.pdf), [pdf 4-par-page](cours/cours8.handout4.pdf), [fichiers exemples](cours/cours8.examples).
+- cours 9 : GADT. [pdf](cours/cours9.handout.pdf), [pdf 4-par-page](cours/cours9.handout4.pdf), [fichiers exemples](cours/cours9.examples).
+
 
 ### Examen
+
+Les portions de cours non traitées pendant les séances du lundi soir
+ne seront pas au programme de l'examen. C'est le cas par exemple de la
+seconde moitié du cours 6 sur le Hashconsing.
+
 
 ### Projet
 
