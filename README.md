@@ -27,6 +27,8 @@ Lundi 16h-18h, salle 153 (Olympe de Gouges), à partir du 16/1
 
 ### Projet
 
+Voir [projet/README.md](projet/README.md)
+
 ### TP
 
 Les premiers TP se feront sur http://pfav.ddns.net , une instance de la plateforme **LearnOCaml** dédiée à ce cours :
