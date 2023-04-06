@@ -26,6 +26,8 @@ rule token = parse
   | ['0'-'9']+ as i  { INT (int_of_string i) }
   | '+'              { PLUS }
   | '*'              { TIMES }
+  | '/'              { DIV }
+  | '-'              { MINUS }
   | '('              { LPARA }
   | ')'              { RPARA }
   | ','              { COL }
