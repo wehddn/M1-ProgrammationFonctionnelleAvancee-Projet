@@ -2,15 +2,15 @@ open Syntax
 
 let rec eval expr =
   match expr with
-  | Num n -> n
+  | Num n -> float_of_int n
   | Var v -> failwith "Can't evaluate variable"
-  | App2 (Plus, e1, e2) -> eval e1 + eval e2
+  | App2 (Plus, e1, e2) -> eval e1 +. eval e2
   | _ -> failwith "Not implemented"
 
 let menu_evaluate str =
   let ast = Parser.expr Lexer.token (Lexing.from_channel str) in
   let result = eval ast in
-  print_int result; print_newline ()
+  print_float result; print_newline ()
 
 let rec menu () =
   print_endline "Choose an action:";
