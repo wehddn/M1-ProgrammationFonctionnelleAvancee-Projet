@@ -3,6 +3,7 @@ open Syntax
 let rec eval expr =
   match expr with
   | Num n -> n
+  | Var v -> failwith "Can't evaluate variable"
   | App2 (Plus, e1, e2) -> eval e1 + eval e2
   | _ -> failwith "Not implemented"
 
