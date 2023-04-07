@@ -1,9 +1,14 @@
 open Syntax
 
+let sqrt x = sqrt x
+
 let rec eval expr =
   match expr with
   | Num n -> float_of_int n
   | Var v -> failwith "Can't evaluate variable"
+  | App0 Pi -> 3.141592653589793 
+  | App0 E -> 2.71828182845904523536
+  | App1 (Sqrt, e) -> sqrt (eval e) 
   | App2 (Plus, e1, e2) -> eval e1 +. eval e2
   | _ -> failwith "Not implemented"
 
