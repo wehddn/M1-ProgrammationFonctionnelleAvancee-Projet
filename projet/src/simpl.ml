@@ -3,13 +3,19 @@ open Eval
 
 (*
   The code consists of two main parts, the first one is a set of
-  simplification rules implemented in the simpl_functions, and the 
+  simplification rules implemented in the simpl_arith, and the 
   second one is a recursive application of the simplification 
   rules to an expression.
 *)
 
-let simpl_functions expr =
+let simpl_arith expr =
   match expr with
+  (* - - x = x *)
+  | App1 (UMinus, App1 (UMinus, e1)) -> e1
+
+  (* - x + y = y - x *)
+  | App2 (Plus, App1 (UMinus, e1), e2) -> App2 (Minus, e2, e1)
+
   (* x + 0 = 0*)
   | App2 (Plus, e1, e2) -> 
     if e1 = Num 0 then e2 else
@@ -24,25 +30,69 @@ let simpl_functions expr =
   (* 0 - x = -x *)
   | App2 (Minus, e1, e2) when e1 = Num 0 -> App1 (UMinus, e2)
 
-  (* a * 0 = 0 *)
+  (* x * 0 = 0 *)
   | App2 (Mult, e1, e2) when e1 = Num 0 || e2 = Num 0 -> Num 0
 
-  (* a * 1 = a *)
+  (* x * 1 = x *)
   | App2 (Mult, e1, e2) -> 
     if e1 = Num 1 then e2 else
     if e2 = Num 1 then e1 else expr
 
-  (* a / 1 = a *)
+  (* x / 1 = x *)
   | App2 (Div, e1, e2) when e2 = Num 1 -> e1
 
-  (* 0 / a = a *)
+  (* 0 / x = x *)
   | App2 (Div, e1, e2) when e1 = Num 0 -> e2
 
   (* log(exp(x)) = x *)
   | App1 (Log, App1 (Exp, e)) -> e 
 
+  | _ -> expr
+
+let simpl_trig expr =
+  match expr with
   (* tan(x) = sin(x)/cos(x) *)
-  | App1 (Tan, e) -> App2 (Div, App1 (Sin, e), App1 (Cos, e))
+  | App2 (Div, App1 (Sin, e1), App1 (Cos, e2)) when e1 = e2 -> App1 (Tan, e1)
+
+  (* sin(a)*cos(b) + cos(a)*sin(b) = sin(a+b) and combinations *)
+  | App2 (Plus, App2 (Mult, App1 (Sin, a1), App1 (Cos, b1)), App2 (Mult, App1 (Cos, a2), App1 (Sin, b2)))
+  | App2 (Plus, App2 (Mult, App1 (Sin, a1), App1 (Cos, b1)), App2 (Mult, App1 (Sin, b2), App1 (Cos, a2)))  
+  | App2 (Plus, App2 (Mult, App1 (Cos, b1), App1 (Sin, a1)), App2 (Mult, App1 (Sin, b2), App1 (Cos, a2)))
+  | App2 (Plus, App2 (Mult, App1 (Cos, b1), App1 (Sin, a1)), App2 (Mult, App1 (Cos, a2), App1 (Sin, b2)))
+    when a1 = a2 && b1 = b2 -> App1 (Sin, (App2 (Plus, a1, b1)))
+
+  (* sin(a)*cos(b) - cos(a)*sin(b) = sin(a-b) and combinations *)
+  | App2 (Minus, App2 (Mult, App1 (Sin, a1), App1 (Cos, b1)), App2 (Mult, App1 (Cos, a2), App1 (Sin, b2)))
+  | App2 (Minus, App2 (Mult, App1 (Sin, a1), App1 (Cos, b1)), App2 (Mult, App1 (Sin, b2), App1 (Cos, a2)))
+  | App2 (Minus, App2 (Mult, App1 (Cos, b1), App1 (Sin, a1)), App2 (Mult, App1 (Sin, b2), App1 (Cos, a2)))
+  | App2 (Minus, App2 (Mult, App1 (Cos, b1), App1 (Sin, a1)), App2 (Mult, App1 (Cos, a2), App1 (Sin, b2)))
+    when a1 = a2 && b1 = b2 -> App1 (Sin, (App2 (Minus, a1, b1)))
+
+  (* cos(a)*cos(b) - sin(a)*sin(b) = cos(a+b) and combinations *)
+  | App2 (Minus, App2 (Mult, App1 (Cos, a1), App1 (Cos, b1)), App2 (Mult, App1 (Sin, a2), App1 (Sin, b2)))
+    when a1 = a2 && b1 = b2 -> App1 (Cos, (App2 (Plus, a1, b1)))
+  | App2 (Minus, App2 (Mult, App1 (Cos, a1), App1 (Cos, b1)), App2 (Mult, App1 (Sin, b2), App1 (Sin, a2)))
+    when a1 = a2 && b1 = b2 -> App1 (Cos, (App2 (Plus, a1, b1)))
+
+  (* cos(a)*cos(b) + sin(a)*sin(b) = cos(a-b) and combinations *)
+  | App2 (Plus, App2 (Mult, App1 (Cos, a1), App1 (Cos, b1)), App2 (Mult, App1 (Sin, a2), App1 (Sin, b2)))
+    when a1 = a2 && b1 = b2 -> App1 (Cos, (App2 (Minus, a1, b1)))
+  | App2 (Plus, App2 (Mult, App1 (Cos, a1), App1 (Cos, b1)), App2 (Mult, App1 (Sin, b2), App1 (Sin, a2)))
+    when a1 = a2 && b1 = b2 -> App1 (Cos, (App2 (Minus, a1, b1)))
+  
+  (* (tan(a) + tan(b))/(1 - tan(a)*tan(b)) = tan(a+b) and combinations *)
+  | App2 (Div, App2 (Plus, App1 (Tan, a1), App1 (Tan, b1)), App2 (Minus, Num 1, App2 (Mult, App1 (Tan, a2), App1 (Tan, b2))))
+    when a1 = a2 && b1 = b2 -> App1 (Tan, (App2 (Plus, a1, b1)))
+  | App2 (Div, App2 (Plus, App1 (Tan, a1), App1 (Tan, b1)), App2 (Minus, Num 1, App2 (Mult, App1 (Tan, b2), App1 (Tan, a2))))
+    when a1 = a2 && b1 = b2 -> App1 (Tan, (App2 (Plus, a1, b1)))
+  | App2 (Div, App2 (Plus, App1 (Tan, b1), App1 (Tan, a1)), App2 (Minus, Num 1, App2 (Mult, App1 (Tan, a2), App1 (Tan, b2))))
+    when a1 = a2 && b1 = b2 -> App1 (Tan, (App2 (Plus, a1, b1)))
+
+  (* (tan(a) - tan(b))/(1 + tan(a)*tan(b)) = tan(a-b) *)
+  | App2 (Div, App2 (Minus, App1 (Tan, a1), App1 (Tan, b1)), App2 (Plus, Num 1, App2 (Mult, App1 (Tan, a2), App1 (Tan, b2))))
+    when a1 = a2 && b1 = b2 -> App1 (Tan, (App2 (Minus, a1, b1)))
+  | App2 (Div, App2 (Minus, App1 (Tan, a1), App1 (Tan, b1)), App2 (Plus, Num 1, App2 (Mult, App1 (Tan, b2), App1 (Tan, a2))))
+    when a1 = a2 && b1 = b2 -> App1 (Tan, (App2 (Minus, a1, b1)))
 
   | _ -> expr
 
@@ -52,7 +102,8 @@ let simpl_functions expr =
   performed.
 *)
 let simplify expr =
-  let expr' = simpl_functions expr in
+  let expr' = simpl_arith expr in
+  let expr' = simpl_trig expr' in
   if expr = expr' then expr else expr'
 
 let rec simpl_aux expr = 
