@@ -34,12 +34,6 @@ let rec derive e x =
        | Minus -> App2 (Minus, derive e1 x, derive e2 x)
        | Div -> App2 (Div, App2 (Minus, App2 (Mult, derive e1 x, e2), App2 (Mult, e1, derive e2 x)), App2 (Expo, e2, Num 2))
        | Expo -> App2 (Mult, e, App2 (Plus, App2 (Mult, derive e2 x, App1 (Log, e1)), App2 (Div, App2 (Mult, derive e1 x, e2), e1))))
- (* (e1^e2)' = e1^e2 * (e2 * log(e1))' + log(e1^e2) * e1' *)
- (* gauche: e1^e2 * (e2 * log(e1))' *)
- (* droite: log(e1^e2) * e1' *)
- (*| App2 (Expo, e1, e2) ->
-  let gauche = App2 (Mult, e2, App2 (Expo, e1, App2 (Minus, e2, Num 1))) in
-  let droite = App2 (Mult, App2 (Expo, e1, e2), derive e1 x) in
-  App2 (Mult, App1 (Plus, gauche, droite), derive (App1 (Log, e1)) x) *)
+ 
      
 
