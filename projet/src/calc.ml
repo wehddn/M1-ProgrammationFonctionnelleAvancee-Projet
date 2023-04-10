@@ -2,6 +2,7 @@ open Syntax
 open Eval
 open Simpl
 open Subst
+open Derive
 
 
 let parse_expression str =
@@ -27,11 +28,20 @@ let menu_subst str =
   let result = subst e x e' in
   print_string (to_string result); print_newline ()
 
+let menu_derive str =
+  print_endline "Saisir l'expression à dériver";
+  let e = Parser.expr Lexer.token (Lexing.from_channel str) in
+  print_endline "Entrer la variable par rapport à laquelle dériver";
+  let x = read_line () in
+  let result = derive e x in
+  print_string (to_string result); print_newline ()
+
 let rec menu () =
   print_endline "Choose an action:";
   print_endline "1. Evaluate";
   print_endline "2. Simplify";
-  print_endline "3. Substitution";
+  print_endline "3. Substitute";
+  print_endline "4. Derive";
   print_endline "0. Exit";
   match read_int () with
   | 0 -> print_endline "Exiting..."
@@ -44,8 +54,12 @@ let rec menu () =
     menu_simpl stdin;
     menu ()
   | 3 ->
-    print_endline "Substitution :";
+    print_endline "Substitute :";
     menu_subst stdin;
+    menu ()
+   |4 -> 
+    print_endline "Derive :";
+    menu_derive stdin;
     menu ()
   | _ -> print_endline "Invalid choice"; menu ()
   

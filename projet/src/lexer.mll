@@ -17,7 +17,7 @@
                 ("tan", Tan);
                 ("asin", ASin);
                 ("acos", ACos);
-                ("atan", ATan)]
+                ("atan", ATan);]
 }
 
 rule token = parse
