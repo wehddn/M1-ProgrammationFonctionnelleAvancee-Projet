@@ -112,6 +112,27 @@ let simplify expr =
   let expr' = simpl_trig expr' in
   if expr = expr' then expr else expr'
 
+let replace2_e1_e2 op e1_lst e2_lst = 
+  List.concat (List.map (fun e1 -> List.map (fun e2 -> App2 (op, e1, e2)) e2_lst) e1_lst)
+
+let lst_expr_to_string lst_expr =
+  match lst_expr with
+  | sub_lst_exprs ->
+    let sub_lst_expr_strings = List.map Syntax.to_string sub_lst_exprs in
+    let sub_lst_expr_string = String.concat ", " sub_lst_expr_strings in
+    Printf.sprintf "%s" sub_lst_expr_string
+
+let remove_duplicates lst_expr =
+  match lst_expr with
+  | lst -> List.sort_uniq compare lst
+
+let simplify expr =
+  let expr_arith = simpl_arith expr in
+  let expr_trig = simpl_trig expr in
+  let expr_lst = if expr = expr_arith then [expr] else [expr_arith] in
+  let expr_lst = if expr = expr_trig then expr_lst@[] else expr_lst@[expr_trig] in
+  expr_lst
+
 let rec simpl_aux expr = 
   let expr = simplify expr in
   match expr with
