@@ -19,11 +19,11 @@ let menu_simpl str =
 
 let menu_subst str =
   print_endline "Saisir l'expression à remplacer";
-  let e = Parser.expr Lexer.token (Lexing.from_string  (read_line ())) in
+  let e = Parser.expr Lexer.token (Lexing.from_channel str) in
   print_endline "Entrer la variable à remplacer";
   let x = read_line () in
   print_endline "Saisir l'expression remplaçante";
-  let e' = Parser.expr Lexer.token (Lexing.from_string  (read_line ())) in
+  let e' = Parser.expr Lexer.token (Lexing.from_channel str) in
   let result = subst e x e' in
   print_string (to_string result); print_newline ()
 
