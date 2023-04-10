@@ -128,7 +128,6 @@ let remove_duplicates lst_expr =
 
 let simplify expr =
   let expr' = simpl_arith expr in
-  let expr' = simpl_trig expr' in
   if expr = expr' then expr else expr'
 
 let rec simpl_aux expr = 
