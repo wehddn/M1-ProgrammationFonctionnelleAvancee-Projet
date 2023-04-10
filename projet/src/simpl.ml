@@ -127,11 +127,9 @@ let remove_duplicates lst_expr =
   | lst -> List.sort_uniq compare lst
 
 let simplify expr =
-  let expr_arith = simpl_arith expr in
-  let expr_trig = simpl_trig expr in
-  let expr_lst = if expr = expr_arith then [expr] else [expr_arith] in
-  let expr_lst = if expr = expr_trig then expr_lst@[] else expr_lst@[expr_trig] in
-  expr_lst
+  let expr' = simpl_arith expr in
+  let expr' = simpl_trig expr' in
+  if expr = expr' then expr else expr'
 
 let rec simpl_aux expr = 
   let expr = simplify expr in
