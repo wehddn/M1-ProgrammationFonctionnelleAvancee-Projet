@@ -25,20 +25,22 @@ let simpl_arith expr =
     if e1 = Num 1 then e2 else
     if e2 = Num 1 then e1 else expr
 
+  (* a / 1 = a *)
+  | App2 (Div, e1, e2) when e2 = Num 1 -> e1
+
+  (* 0 / a = a *)
+  | App2 (Div, e1, e2) when e1 = Num 0 -> e2
+
   (* log(exp(x)) = x *)
   | App1 (Log, App1 (Exp, e)) -> e 
 
-  | _ -> expr
-
-let simpl_trig expr =
-  match expr with  
   (* tan(x) = sin(x)/cos(x) *)
   | App1 (Tan, e) -> App2 (Div, App1 (Sin, e), App1 (Cos, e))
+
   | _ -> expr
 
 let simplify expr =
   let expr' = simpl_arith expr in
-  let expr' = simpl_trig expr' in
   if expr = expr' then expr else expr'
 
 let rec simpl_aux expr = 
