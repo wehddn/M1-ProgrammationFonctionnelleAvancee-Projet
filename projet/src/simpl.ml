@@ -1,7 +1,14 @@
 open Syntax
 open Eval
 
-let simpl_arith expr =
+(*
+  The code consists of two main parts, the first one is a set of
+  simplification rules implemented in the simpl_functions, and the 
+  second one is a recursive application of the simplification 
+  rules to an expression.
+*)
+
+let simpl_functions expr =
   match expr with
   (* x + 0 = 0*)
   | App2 (Plus, e1, e2) -> 
@@ -18,7 +25,7 @@ let simpl_arith expr =
   | App2 (Minus, e1, e2) when e1 = Num 0 -> App1 (UMinus, e2)
 
   (* a * 0 = 0 *)
-  | App2 (Mult, e1, e2) when e1 = Num 0 || e2 = Num 0 -> Num 0 
+  | App2 (Mult, e1, e2) when e1 = Num 0 || e2 = Num 0 -> Num 0
 
   (* a * 1 = a *)
   | App2 (Mult, e1, e2) -> 
@@ -39,8 +46,13 @@ let simpl_arith expr =
 
   | _ -> expr
 
+(*
+  Function applies the simplification rules to an expression and 
+  returns the simplified expression if any simplification was 
+  performed.
+*)
 let simplify expr =
-  let expr' = simpl_arith expr in
+  let expr' = simpl_functions expr in
   if expr = expr' then expr else expr'
 
 let rec simpl_aux expr = 
@@ -60,6 +72,10 @@ let rec count_nodes expr =
   | App1 (_, e) -> 1 + count_nodes e
   | App2 (_, e1, e2) -> 1 + count_nodes e1 + count_nodes e2
 
+(*
+  The function returns the simplified expression with the 
+  smallest number of nodes.
+*)
 let simpl expr =
   let rec aux expr node_count =
     let res = simpl_aux expr in
