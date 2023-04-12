@@ -2,11 +2,12 @@
 %token <string> IDENT
 %token <Syntax.op0> OP0
 %token <Syntax.op1> OP1
-%token PLUS MINUS TIMES DIV LPARA RPARA EOL COL
+%token PLUS MINUS TIMES DIV EXPO LPARA RPARA EOL COL
 %token EVAL SUBST SIMPL DERIVE INTEG PLOT
 %start <Syntax.expr> expr
 %left PLUS MINUS
 %left TIMES DIV
+%right EXPO
 %start <Syntax.cmd> command
 %{ open Syntax %}
 %%
@@ -16,6 +17,7 @@ e: e1=e PLUS e2=e    {App2(Plus,e1,e2)}
   | e1=e MINUS e2=e  {App2(Minus,e1,e2)}
   | e1=e TIMES e2=e  {App2(Mult,e1,e2)}
   | e1=e DIV e2=e    {App2(Div,e1,e2)}
+  | e1=e EXPO e2=e   {App2(Expo,e1,e2)}
   | LPARA e1=e RPARA {e1}
   | i1=INT           {Num(i1)}
   | v1=IDENT         {Var(v1)}

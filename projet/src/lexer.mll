@@ -28,6 +28,7 @@ rule token = parse
   | '*'              { TIMES }
   | '/'              { DIV }
   | '-'              { MINUS }
+  | '^'              { EXPO }
   | '('              { LPARA }
   | ')'              { RPARA }
   | ','              { COL }
