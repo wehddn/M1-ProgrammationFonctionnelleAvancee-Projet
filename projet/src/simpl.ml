@@ -49,6 +49,8 @@ let simpl_arith expr =
 
   | _ -> expr
 
+let is_even num = num mod 2 = 0
+
 let simpl_trig expr =
   match expr with
   (* tan(x) = sin(x)/cos(x) *)
@@ -93,6 +95,10 @@ let simpl_trig expr =
     when a1 = a2 && b1 = b2 -> App1 (Tan, (App2 (Minus, a1, b1)))
   | App2 (Div, App2 (Minus, App1 (Tan, a1), App1 (Tan, b1)), App2 (Plus, Num 1, App2 (Mult, App1 (Tan, b2), App1 (Tan, a2))))
     when a1 = a2 && b1 = b2 -> App1 (Tan, (App2 (Minus, a1, b1)))
+
+  (* sin(x+2π) = sin(x) *)
+  | App1 (op, App2 (Plus, e, App2 (Mult, Num n, App0 (Pi)))) 
+    when is_even n && (op = Sin || op = Cos) -> App1 (op, e)
 
   | _ -> expr
 
