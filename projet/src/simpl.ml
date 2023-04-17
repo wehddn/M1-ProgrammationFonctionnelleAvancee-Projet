@@ -49,12 +49,14 @@ let simpl_arith expr =
 
 let is_even num = num mod 2 = 0
 
+let is_odd num = num mod 2 = 1
+
 let simpl_trig expr =
   match expr with
   (* sin(x)/cos(x) = tan(x) *)
   | App2 (Div, App1 (Sin, e1), App1 (Cos, e2)) when e1 = e2 -> App1 (Tan, e1)
 
-  (* cos(a)*sin(b)+cos(b)*sin(a) = sin(a+b) *)
+  (* cos(a)*sin(b)+cos(b)*sin(a) = sin(a+b) a-b+b-a cos(a-b)*sin(b-a)+cos(b-a)*sin(a-b) *)
   | App2 (Plus, App2 (Mult, App1 (Cos, a1), App1 (Sin, b1)), App2 (Mult, App1 (Cos, b2), App1 (Sin, a2)))
     when a1 = a2 && b1 = b2 -> App1 (Sin, (App2 (Plus, a1, b1)))
 
@@ -78,9 +80,15 @@ let simpl_trig expr =
   | App2 (Div, App2 (Minus, App1 (Tan, a1), App1 (Tan, b1)), App2 (Plus, Num 1, App2 (Mult, App1 (Tan, a2), App1 (Tan, b2))))
     when a1 = a2 && b1 = b2 -> App1 (Tan, (App2 (Minus, a1, b1)))
 
-  (* sin(x+2*pi) = sin(x) *)
+  (* sin(x+2*pi) = sin(x); cos(x+2*pi) = cos(x) *)
   | App1 (op, App2 (Plus, e, App2 (Mult, Num n, App0 (Pi)))) 
     when is_even n && (op = Sin || op = Cos) -> App1 (op, e)
+
+  (* tan(x+pi) = tan(x) *)
+  | App1 (op, App2 (Plus, e, App0 (Pi))) 
+    when op = Tan -> App1 (op, e)
+  | App1 (op, App2 (Plus, e, App2 (Mult, Num n, App0 (Pi)))) 
+    when is_odd n && op = Tan -> App1 (op, e)
 
   | _ -> expr
 
@@ -95,6 +103,7 @@ let simplify expr =
   if expr = expr' then expr else expr'
 
 let rec simpl_aux expr = 
+  
   let expr = simplify expr in
   match expr with
   | Num _ -> expr
@@ -116,10 +125,15 @@ let rec count_nodes expr =
   smallest number of nodes.
 *)
 let simpl expr =
-  let expr = norm expr in
   let rec aux expr node_count =
     let res = simpl_aux expr in
     let new_count = count_nodes res in
     if new_count < node_count then aux res new_count else res
   in
-  aux expr (count_nodes expr)
+  let rec aux' expr node_count =
+    let expr_norm = norm expr in
+    let res = aux expr_norm (count_nodes expr_norm) in
+    let new_count = count_nodes res in
+    if new_count < node_count then aux' res new_count else res
+  in
+  aux' expr (count_nodes expr)
