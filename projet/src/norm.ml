@@ -84,7 +84,7 @@ let rec to_expr node =
   | Internal1 (op, node) -> App1 (op, to_expr node)
   | Internal2 (op, children) ->
     let exprs = to_expr_list children in
-    let exprs = List.sort cmp exprs in
+    let exprs = if op = Plus || op = Mult then List.sort cmp exprs else exprs in
     match op with
     | op -> appn_helper op exprs
 
