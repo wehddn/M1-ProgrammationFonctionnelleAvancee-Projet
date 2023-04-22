@@ -3,7 +3,6 @@ open Eval
 open Simpl
 open Subst
 open Derive
-(*
 let rec integ_step (u : expr) (dv : expr) (x : string) (e : expr) : expr =
     match e with
     | Num n -> App2 (Mult, Num n, u)
@@ -17,8 +16,8 @@ let rec integ_step (u : expr) (dv : expr) (x : string) (e : expr) : expr =
         let f = App2 (Mult, du, v) in
         let g = App2 (Mult, dv, integ_step u dv e1) in
         App2 (Plus, f, g)
-    | _ -> raise (Invalid_argument "Unsupported expression")*)
-  (*
+    | _ -> raise (Invalid_argument "Unsupported expression")
+  
 let rec integ (e : expr) (x : string) (a : expr) (b : expr) : expr =
   let dx = App2 (Minus, Var x, Num 0) in
   match e with
@@ -31,8 +30,8 @@ let rec integ (e : expr) (x : string) (a : expr) (b : expr) : expr =
       let v = integ e2 x a b in
       let du = dx in
       let dv = derive e2 x in
-      (*App2 (Minus, App2 (Mult, e1, v), App1 (Integ, App2 (Mult, du, v)))
-       | integ_step u dv*)
+      App2 (Minus, App2 (Mult, e1, v), App1 (Integ, App2 (Mult, du, v)))
+       | integ_step u dv
   | App2 (Div, e1, e2) ->
       let u = Var x in
       let v = integ e2 x a b in
@@ -56,4 +55,3 @@ let rec integ (e : expr) (x : string) (a : expr) (b : expr) : expr =
       let u = App1 (Cos, e1) in
       let v = integ e1 x a b in
       App2 (Minus, App1 (Cos, App1 (Subst, App2 (Mult, App1 (UMinus, b), u), e1, Var x)), App1 (Cos, App1 (Subst, App2 (Mult, App1 (UMinus, a), u), e1, Var x)))
-*)
