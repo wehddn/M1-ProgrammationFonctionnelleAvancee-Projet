@@ -3,7 +3,7 @@ open Eval
 open Simpl
 open Subst
 open Derive
-open Integ
+open Integ2
 
 
 let parse_expression str =
@@ -55,6 +55,7 @@ let rec menu () =
   print_endline "2. Simplify";
   print_endline "3. Substitute";
   print_endline "4. Derive";
+  print_endline "5. Integrale";
   print_endline "0. Exit";
   match read_int () with
   | 0 -> print_endline "Exiting..."
