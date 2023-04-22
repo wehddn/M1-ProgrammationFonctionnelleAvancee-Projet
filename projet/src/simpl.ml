@@ -53,6 +53,9 @@ let is_odd num = num mod 2 = 1
 
 let simpl_trig expr =
   match expr with
+  (* cos(x)^2+sin(x)^2 = 1 *)
+  | App2(Plus, App2(Expo, App1(Cos, e1), Num 2), App2(Expo, App1(Sin, e2), Num 2)) when e1 = e2 -> Num 1
+
   (* sin(x)/cos(x) = tan(x) *)
   | App2 (Div, App1 (Sin, e1), App1 (Cos, e2)) when e1 = e2 -> App1 (Tan, e1)
 
@@ -89,6 +92,17 @@ let simpl_trig expr =
     when op = Tan -> App1 (op, e)
   | App1 (op, App2 (Plus, e, App2 (Mult, Num n, App0 (Pi)))) 
     when is_odd n && op = Tan -> App1 (op, e)
+
+  (* 2*cos(x)*sin(x) = sin(2*x) *)
+  | App2(Mult, App2(Mult, Num 2, App1(Cos, e1)), App1(Sin, e2)) when e1 = e2 -> App1(Sin, App2(Mult, Num 2, e1))
+
+  (* cos(x)^2 - sin(x)^2 = cos(2*x) *)
+  | App2(Minus, App2(Expo, App1(Cos, e1), Num 2), App2(Expo, App1(Sin, e2), Num 2)) 
+    when e1 = e2 -> App1(Cos, App2(Mult, Num 2, e1))
+
+  (* (2*tan(x))/(1 - tan(x)^2) = tan(2*x) *)
+  | App2(Div, App2(Mult, Num 2, App1(Tan, e1)), App2(Minus, Num 1, App2(Expo, App1(Tan, e2), Num 2))) 
+    when e1 = e2 -> App1(Tan, App2(Mult, Num 2, e1))
 
   | _ -> expr
 
