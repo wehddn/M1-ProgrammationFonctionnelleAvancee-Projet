@@ -43,11 +43,11 @@ let menu_derive str =
     print_endline "Entrer la variable d'intégration";
     let x = read_line () in
     print_endline "Entrer la borne inférieure";
-    let a = read_float () in
+    let a = Parser.expr Lexer.token (Lexing.from_channel str) in
     print_endline "Entrer la borne supérieure";
-    let b = read_float () in
+    let b = Parser.expr Lexer.token (Lexing.from_channel str) in
     let result = integ e x a b in
-    print_string (to_string result); print_newline () 
+    print_float result; print_newline () 
   
 let rec menu () =
   print_endline "Choose an action:";
