@@ -3,6 +3,7 @@ open Eval
 open Simpl
 open Subst
 open Derive
+open Integ
 
 
 let parse_expression str =
@@ -36,6 +37,18 @@ let menu_derive str =
   let result = derive e x in
   print_string (to_string result); print_newline ()
 
+  let menu_integ str =
+    print_endline "Saisir l'expression à intégrer";
+    let e = Parser.expr Lexer.token (Lexing.from_channel str) in
+    print_endline "Entrer la variable d'intégration";
+    let x = read_line () in
+    print_endline "Entrer la borne inférieure";
+    let a = read_float () in
+    print_endline "Entrer la borne supérieure";
+    let b = read_float () in
+    let result = integ e x a b in
+    print_string (to_string result); print_newline () 
+  
 let rec menu () =
   print_endline "Choose an action:";
   print_endline "1. Evaluate";
@@ -57,9 +70,13 @@ let rec menu () =
     print_endline "Substitute :";
     menu_subst stdin;
     menu ()
-   |4 -> 
+  |4 -> 
     print_endline "Derive :";
     menu_derive stdin;
+    menu ()
+  | 5 -> 
+    print_endline "Integrate :";
+    menu_integ stdin;
     menu ()
   | _ -> print_endline "Invalid choice"; menu ()
   
