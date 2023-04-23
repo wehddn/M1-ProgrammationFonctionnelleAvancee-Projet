@@ -4,7 +4,7 @@ open Simpl
 open Subst
 open Derive
 open Plot
-(*open Graphics*)
+open Graphics
 
 
 let parse_expression str =
@@ -40,19 +40,11 @@ let menu_derive str =
 
 let menu_plot str =
   print_endline "Enter the expression to plot:";
-  let str = read_line () in
-  let e = parse_expression str in
+  let e = Parser.expr Lexer.token (Lexing.from_channel str) in
   print_endline "Enter the variable to plot against:";
   let x = read_line () in
-  print_endline "Enter the lower x bound:";
-  let a = read_float () in
-  print_endline "Enter the upper x bound:";
-  let b = read_float () in
-  print_endline "Enter the lower y bound:";
-  let c = read_float () in
-  print_endline "Enter the upper y bound:";
-  let d = read_float () in
-  plot e x a b c d;;
+  plot e x
+
 
 let rec menu () =
   print_endline "Choose an action:";

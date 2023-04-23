@@ -8,6 +8,7 @@ type nums = int
 
 type expr =
   | Num of nums
+  | FloatNum of float
   | Var of string
   | App0 of op0
   | App1 of op1 * expr
@@ -81,6 +82,7 @@ let paren str = "(" ^ str ^ ")"
 
 let rec to_string = function
   | Num n -> string_of_int n
+  | FloatNum n -> string_of_float n
   | Var v -> v
   | App0 o -> str0 o
   | App1(o,e) -> str1 o ^ paren(to_string e)

@@ -1,5 +1,6 @@
 %token <int> INT
 %token <string> IDENT
+%token <float> FLOAT
 %token <Syntax.op0> OP0
 %token <Syntax.op1> OP1
 %token PLUS MINUS TIMES DIV EXPO LPARA RPARA EOL COL
@@ -20,6 +21,7 @@ e: e1=e PLUS e2=e    {App2(Plus,e1,e2)}
   | e1=e EXPO e2=e   {App2(Expo,e1,e2)}
   | LPARA e1=e RPARA {e1}
   | i1=INT           {Num(i1)}
+  | f1=FLOAT         {FloatNum(f1)}
   | v1=IDENT         {Var(v1)}
   | op0=OP0          {App0(op0)}
   | op1=OP1 LPARA e1=e RPARA {App1(op1,e1)}
@@ -34,4 +36,3 @@ c:
   | PLOT LPARA e1=e COL v1=IDENT RPARA {Plot(e1,v1)}
   | INTEG LPARA e1=e COL v1=IDENT COL lower=e COL upper=e RPARA
       {Integ(e1,v1,lower,upper)}
-

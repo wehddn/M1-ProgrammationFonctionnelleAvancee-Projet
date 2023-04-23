@@ -11,6 +11,8 @@ let rec derive e x =
   | Var _ -> Num 0
   (* e est un nombre, la dérivée est 0 *)
   | Num _ -> Num 0
+  (* e est un nombre, la dérivée est 0 *)
+  | FloatNum _ -> Num 0
   (* e est Pi | E, la dérivée est 0 *)
   | App0 _ -> Num 0
   (* e est une opération unaire *)
@@ -34,6 +36,3 @@ let rec derive e x =
        | Minus -> App2 (Minus, derive e1 x, derive e2 x)
        | Div -> App2 (Div, App2 (Minus, App2 (Mult, derive e1 x, e2), App2 (Mult, e1, derive e2 x)), App2 (Expo, e2, Num 2))
        | Expo -> App2 (Mult, e, App2 (Plus, App2 (Mult, derive e2 x, App1 (Log, e1)), App2 (Div, App2 (Mult, derive e1 x, e2), e1))))
- 
-     
-

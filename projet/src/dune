@@ -3,7 +3,8 @@
 (executable
 (name calc)
 (modes byte exe)
-(libraries graphics))
+(libraries graphics)
+)
 
 (ocamllex (modules lexer))
 

@@ -24,6 +24,7 @@ rule token = parse
   | [' ' '\t']       { token lexbuf }
   | '\n'             { EOL }
   | ['0'-'9']+ as i  { INT (int_of_string i) }
+  | ['0'-'9']+ ('.' ['0'-'9']* )? as f { FLOAT (float_of_string f) }
   | '+'              { PLUS }
   | '*'              { TIMES }
   | '/'              { DIV }
