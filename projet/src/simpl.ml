@@ -18,13 +18,13 @@ let simpl_arith expr =
 
   (* 0 + x = 0*)
   | App2 (Plus, e1, e2) -> 
-    if e1 = Num 0 then e2 else expr
+    if e1 = Num 0 || e1 = FloatNum 0. then e2 else expr
 
   (* x - x = 0 *)
   | App2 (Minus, e1, e2) when e1 = e2 -> Num 0
 
   (* x - 0 = x *)
-  | App2 (Minus, e1, e2) when e2 = Num 0 -> e1 
+  | App2 (Minus, e1, e2) when e2 = Num 0 || e2 = FloatNum 0. -> e1 
 
   (* 0 - x = -x *)
   | App2 (Minus, e1, e2) when e1 = Num 0 -> App1 (UMinus, e2)
@@ -121,6 +121,7 @@ let rec simpl_aux expr =
   let expr = simplify expr in
   match expr with
   | Num _ -> expr
+  | FloatNum _ -> expr
   | Var _ -> expr
   | App0 _ -> expr 
   | App1 (op, e) -> App1 (op, simpl_aux e)
@@ -130,6 +131,7 @@ let rec count_nodes expr =
   match expr with
   | Var _ -> 1
   | Num _ -> 1
+  | FloatNum _ -> 1
   | App0 _ -> 1
   | App1 (_, e) -> 1 + count_nodes e
   | App2 (_, e1, e2) -> 1 + count_nodes e1 + count_nodes e2

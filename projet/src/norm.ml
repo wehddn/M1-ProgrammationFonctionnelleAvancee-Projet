@@ -36,6 +36,7 @@ let rec count_nodes expr =
   match expr with
   | Var _ -> 1
   | Num _ -> 1
+  | FloatNum _ -> 1
   | App0 _ -> 1
   | App1 (_, e) -> 1 + count_nodes e
   | App2 (_, e1, e2) -> 1 + count_nodes e1 + count_nodes e2

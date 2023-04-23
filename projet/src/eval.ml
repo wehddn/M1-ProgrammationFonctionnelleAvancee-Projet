@@ -3,6 +3,7 @@ open Syntax
 let rec eval expr =
   match expr with
   | Num n -> float_of_int n
+  | FloatNum n -> n
   | Var v -> failwith "Can't evaluate variable"
   | App0 Pi -> Float.pi 
   | App0 E -> 2.71828182845904523536
