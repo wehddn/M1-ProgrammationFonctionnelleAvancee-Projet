@@ -33,9 +33,9 @@ let plot expr var =
   lineto (int_of_float ((-1.0 *. x_min /. x_range) *. float_of_int width)) height;
 
   (* Draw curve *)
-  let num_points = 1000 in
-  let delta_x = x_range /. float_of_int (num_points - 1) in
-  let points = Array.init num_points (fun i ->
+  let num_points = 1000 in  (*nombre de points utilisés pour dessiner la courbe*)
+  let delta_x = x_range /. float_of_int (num_points - 1) in (*la distance entre deux points voisins sur l'axe des x*)
+  let points = Array.init num_points (fun i -> (*initialiser un tableau ou chaque élément est une paire (x',y')*)
     let x = x_min +. float_of_int i *. delta_x in
     let y = eval_expr (int_of_float x) in
     let x' = int_of_float (((x -. x_min) /. x_range) *. float_of_int width) in
