@@ -116,24 +116,6 @@ let simplify expr =
   let expr' = simpl_trig expr' in
   if expr = expr' then expr else expr'
 
-let replace2_e1_e2 op e1_lst e2_lst = 
-  List.concat (List.map (fun e1 -> List.map (fun e2 -> App2 (op, e1, e2)) e2_lst) e1_lst)
-
-let lst_expr_to_string lst_expr =
-  match lst_expr with
-  | sub_lst_exprs ->
-    let sub_lst_expr_strings = List.map Syntax.to_string sub_lst_exprs in
-    let sub_lst_expr_string = String.concat ", " sub_lst_expr_strings in
-    Printf.sprintf "%s" sub_lst_expr_string
-
-let remove_duplicates lst_expr =
-  match lst_expr with
-  | lst -> List.sort_uniq compare lst
-
-let simplify expr =
-  let expr' = simpl_functions expr in
-  if expr = expr' then expr else expr'
-
 let rec simpl_aux expr = 
   
   let expr = simplify expr in
@@ -162,4 +144,10 @@ let simpl expr =
     let new_count = count_nodes res in
     if new_count < node_count then aux res new_count else res
   in
-  aux expr (count_nodes expr)
+  let rec aux' expr node_count =
+    let expr_norm = norm expr in
+    let res = aux expr_norm (count_nodes expr_norm) in
+    let new_count = count_nodes res in
+    if new_count < node_count then aux' res new_count else res
+  in
+  aux' expr (count_nodes expr)
