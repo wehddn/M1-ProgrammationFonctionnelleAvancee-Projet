@@ -86,7 +86,7 @@ let rec to_expr node descending =
   | Internal2 (op, children) ->
     let exprs = to_expr_list children descending in
     let exprs = if op = Plus || op = Mult then List.sort cmp exprs else exprs in
-    let exprs = if descending then List.rev exprs else exprs in
+    let exprs = if descending && (op = Plus || op = Mult) then List.rev exprs else exprs in
     match op with
     | op -> appn_helper op exprs
 
