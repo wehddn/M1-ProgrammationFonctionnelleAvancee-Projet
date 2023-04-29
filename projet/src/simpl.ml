@@ -20,11 +20,13 @@ let simpl_arith expr =
   | App2 (Plus, App1 (UMinus, e1), e2) -> App2 (Minus, e2, e1)
 
   (* 0 + x = 0*)
-  | App2 (Plus, e1, e2) -> 
-    if e1 = Num 0 || e1 = FloatNum 0. then e2 else expr
+  | App2 (Plus, e1, e2) when e1 = Num 0 || e1 = FloatNum 0. -> e2
 
   (* x - x = 0 *)
   | App2 (Minus, e1, e2) when e1 = e2 -> Num 0
+
+  (* x + x = 2*x *)
+  | App2 (Plus, e1, e2) when e1 = e2 -> App2 (Mult, Num 2, e1)
 
   (* x - 0 = x *)
   | App2 (Minus, e1, e2) when e2 = Num 0 || e2 = FloatNum 0. -> e1 
@@ -36,8 +38,7 @@ let simpl_arith expr =
   | App2 (Mult, e1, e2) when e1 = Num 0 -> Num 0
 
   (* 1 * x = x *)
-  | App2 (Mult, e1, e2) -> 
-    if e1 = Num 1 then e2 else expr
+  | App2 (Mult, e1, e2) when e1 = Num 1 -> e2
 
   (* x / 1 = x *)
   | App2 (Div, e1, e2) when e2 = Num 1 -> e1
@@ -150,7 +151,7 @@ let simpl expr =
     if new_count < node_count then aux res new_count else res
   in
   let rec aux' expr node_count =
-    let expr_norm = norm expr in
+    let expr_norm = norm expr false in
     let res = aux expr_norm (count_nodes expr_norm) in
     let new_count = count_nodes res in
     if new_count < node_count then aux' res new_count else res
