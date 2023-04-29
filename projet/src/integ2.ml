@@ -114,7 +114,7 @@ let integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
   (match restree with
   | Some v -> print_string "tree : "; print_float v; print_newline (); 
   | None -> print_endline "not tree" );
-  let p = parts expr x in print_endline (node_to_string p);
+  let p = parts expr x in print_endline ("parts : " ^ (node_to_string p));
   let res = eval_primitive expr x a b in 
   match res with 
   | Some v -> v
