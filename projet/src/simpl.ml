@@ -16,6 +16,9 @@ let simpl_arith expr =
   (* x + (-y) = y - x *)
   | App2 (Plus, e1, App1 (UMinus, e2)) -> App2 (Minus, e1, e2)
 
+  (* -x + y = y - x *)
+  | App2 (Plus, App1 (UMinus, e1), e2) -> App2 (Minus, e2, e1)
+
   (* 0 + x = 0*)
   | App2 (Plus, e1, e2) -> 
     if e1 = Num 0 || e1 = FloatNum 0. then e2 else expr
