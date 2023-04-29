@@ -8,10 +8,10 @@ open Norm
 type integral = expr * string
 
 type node =
-  | Expr of expr
+  | Leaf of expr
   | Integral of integral
-  | Const of float * integral
-  | Sum of node * node
+  | Internal2 of op2 * node * node
+
 
 let rec local_eval expr = 
   match expr with
@@ -33,14 +33,73 @@ let rec local_eval expr =
                               FloatNum (eval (App2(op, e1, e2localeval)))
                             with | _ -> App2(op, e1localeval, e2localeval))))
 
+let rec build_tree expr x =
+  let expr = replace_minus expr in
+  match expr with
+  | App2 (op, e1, e2) when op == Mult ->
+    let e1type = (match e1 with | FloatNum _ | Num _ -> true | _ -> false) in
+    let e2type = (match e2 with | FloatNum _ | Num _ -> true | _ -> false) in
+    (match e1type, e2type with
+    | true, true -> Leaf (local_eval (App2 (op, e1, e2)))
+    | true, false -> Internal2 (op, Leaf e1, build_tree e2 x)
+    | false, true -> Internal2 (op, build_tree e1 x, Leaf e2)
+    | false, false -> Integral (App2 (op, e1, e2), x)
+    ) 
+  | App2 (op, e1, e2) when op == Plus ->
+    Internal2 (op, build_tree e1 x, build_tree e2 x)
+  | App2 (op, e1, e2) -> Integral (expr, x)
+  | App1 (op, e1) -> Integral (expr, x)
+  | _ ->
+    Integral (expr, x)
+
+and replace_minus expr =
+  match expr with
+  | App2 (Minus, e1, e2) -> App2 (Plus, replace_minus e1, App1 (UMinus, replace_minus e2))
+  | _ -> expr
+
+let rec node_to_string n =
+  match n with
+  | Leaf e ->
+    "Leaf(" ^ (Syntax.to_string e) ^ ")"
+  | Integral i ->
+    "Integral(" ^ integral_to_string i ^ ")"
+  | Internal2 (op, n1, n2) ->
+    "Internal2(" ^ (Syntax.str2 op) ^ ", " ^ node_to_string n1 ^ ", " ^ node_to_string n2 ^ ")"
+
+and integral_to_string i =
+  let expr, str = i in (Syntax.to_string expr) ^ " d" ^ str 
+
 let formule pexpr (x : string) a b = 
   let saexpr = subst pexpr x a in
   let sbexpr = subst pexpr x b in
   eval sbexpr -. eval saexpr 
 
-let integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
-  let expr = norm expr in
-  let expr = local_eval expr in
+let eval_primitive expr x a b =
   let pexpr = primitive expr (Light.(Var x)) in
-  let res = if expr <> pexpr then formule pexpr x a b else 0.
-  in res
+  if expr <> pexpr then Some (formule pexpr x a b) else None
+
+let rec eval_tree tree x a b = 
+  match tree with
+  | Leaf e -> eval_primitive e x a b
+  | Integral (e, x) -> eval_primitive e x a b
+  | Internal2 (op, n1, n2) ->
+    let n1eval = eval_tree n1 x a b in 
+    let n2eval = eval_tree n2 x a b in
+    (match n1eval, n2eval with
+    | Some x, Some y -> Some (eval (App2(op, FloatNum x, FloatNum y)))
+    | _ -> None 
+    )
+
+let integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
+  let expr = simpl expr in
+  let expr = local_eval expr in
+  let expr = norm expr true in
+  let t = build_tree expr x in print_endline (node_to_string t); 
+  let restree = eval_tree t x a b in 
+  (match restree with
+  | Some v -> print_float v; print_newline (); 
+  | None -> print_endline "not tree" );
+  let res = eval_primitive expr x a b in 
+  match res with 
+  | Some v -> v
+  | None -> 0.

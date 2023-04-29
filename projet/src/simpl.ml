@@ -25,9 +25,6 @@ let simpl_arith expr =
   (* x - x = 0 *)
   | App2 (Minus, e1, e2) when e1 = e2 -> Num 0
 
-  (* x + x = 2*x *)
-  | App2 (Plus, e1, e2) when e1 = e2 -> App2 (Mult, Num 2, e1)
-
   (* x - 0 = x *)
   | App2 (Minus, e1, e2) when e2 = Num 0 || e2 = FloatNum 0. -> e1 
 
