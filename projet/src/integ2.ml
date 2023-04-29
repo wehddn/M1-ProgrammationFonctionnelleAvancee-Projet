@@ -4,6 +4,7 @@ open Subst
 open Eval
 open Simpl
 open Norm
+open Derive
 
 type integral = expr * string
 
@@ -90,15 +91,30 @@ let rec eval_tree tree x a b =
     | _ -> None 
     )
 
+let rec parts expr x =
+  match expr with 
+  | App1 (Log, e) when Syntax.to_string e = x ->
+    parts (App2 (Mult, Num 1, App1 (Log, e))) x
+  | App2 (Mult, e1, App1 (Log, e2))
+  | App2 (Mult, App1 (Log, e2), e1) ->
+    let u = (App1 (Log, e2)) in
+    let du = derive u x in
+    let dv = e1 in
+    let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
+    Internal2 (Minus, Internal2(Mult, Leaf u, Leaf v), Integral (App2(Mult, v, du), x))
+  | _ -> Leaf expr
+
+
 let integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
   let expr = simpl expr in
   let expr = local_eval expr in
-  let expr = norm expr true in
-  let t = build_tree expr x in print_endline (node_to_string t); 
+  let expr' = norm expr true in
+  let t = build_tree expr' x in print_endline (node_to_string t); 
   let restree = eval_tree t x a b in 
   (match restree with
-  | Some v -> print_float v; print_newline (); 
+  | Some v -> print_string "tree : "; print_float v; print_newline (); 
   | None -> print_endline "not tree" );
+  let p = parts expr x in print_endline (node_to_string p);
   let res = eval_primitive expr x a b in 
   match res with 
   | Some v -> v

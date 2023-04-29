@@ -1,10 +1,13 @@
 open Syntax
 
-let primitive (expr : expr) (x : expr) = 
+let rec primitive (expr : expr) (x : expr) = 
   match expr with
   (* k = k*x *)
   | Num k -> Light.((Num k)*x)
   | FloatNum k -> Light.((FloatNum k)*x)
+  (* x *)
+  | Var e when e=(Syntax.to_string x) ->
+    primitive Light.(expr ^ Num 1) x
   (* x^n = (x^(n+1))/(n+1) *)
   | App2(Expo, e, n) when e = x && n <> App1(UMinus, Num 1) -> App2(Div, App2(Expo, x, App2(Plus, n, Num 1)), App2(Plus, n, Num 1))
   (* 1/x = ln|x| *)
