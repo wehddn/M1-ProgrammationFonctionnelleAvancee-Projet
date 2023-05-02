@@ -34,7 +34,7 @@ let rec local_eval expr =
                               FloatNum (eval (App2(op, e1, e2localeval)))
                             with | _ -> App2(op, e1localeval, e2localeval))))
 
-let rec build_tree expr x =
+let rec arith_tree expr x =
   let expr = replace_minus expr in
   match expr with
   | App2 (op, e1, e2) when op == Mult ->
@@ -42,12 +42,12 @@ let rec build_tree expr x =
     let e2type = (match e2 with | FloatNum _ | Num _ -> true | _ -> false) in
     (match e1type, e2type with
     | true, true -> Leaf (local_eval (App2 (op, e1, e2)))
-    | true, false -> Internal2 (op, Leaf e1, build_tree e2 x)
-    | false, true -> Internal2 (op, build_tree e1 x, Leaf e2)
+    | true, false -> Internal2 (op, Leaf e1, arith_tree e2 x)
+    | false, true -> Internal2 (op, arith_tree e1 x, Leaf e2)
     | false, false -> Integral (App2 (op, e1, e2), x)
     ) 
   | App2 (op, e1, e2) when op == Plus ->
-    Internal2 (op, build_tree e1 x, build_tree e2 x)
+    Internal2 (op, arith_tree e1 x, arith_tree e2 x)
   | App2 (op, e1, e2) -> Integral (expr, x)
   | App1 (op, e1) -> Integral (expr, x)
   | _ ->
@@ -108,14 +108,18 @@ let rec parts expr x =
 let integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
   let res = eval_primitive expr x a b in 
   match res with 
-  | Some v -> v
+  | Some v -> print_endline "primitives"; v
   | None -> 
     let expr = simpl expr in
     let expr = local_eval expr in
     let expr' = norm expr true in
-    let t = build_tree expr' x in
+    let t = arith_tree expr' x in
     let restree = eval_tree t x a b in 
     (match restree with
-    | Some v -> v 
+    | Some v -> print_endline "arith_tree"; v 
     | None -> 
-    let p = parts expr x in print_endline ("parts : " ^ (node_to_string p)); 0.)
+    let p = parts expr x in  
+    let resp = eval_tree p x a b in 
+    (match resp with
+    | Some v -> print_endline "parts"; v 
+    | None -> print_endline "error"; 0.))
