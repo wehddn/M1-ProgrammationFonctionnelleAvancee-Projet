@@ -5,7 +5,7 @@ open Subst
 open Derive
 open Graphics
 
-let plot expr var =
+let plot_expression expr var =
   
   let eval_expr x =
     let subst_expr = subst expr var (Num x) in
