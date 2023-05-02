@@ -106,16 +106,16 @@ let rec parts expr x =
 
 
 let integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
-  let expr = simpl expr in
-  let expr = local_eval expr in
-  let expr' = norm expr true in
-  let t = build_tree expr' x in print_endline (node_to_string t); 
-  let restree = eval_tree t x a b in 
-  (match restree with
-  | Some v -> print_string "tree : "; print_float v; print_newline (); 
-  | None -> print_endline "not tree" );
-  let p = parts expr x in print_endline ("parts : " ^ (node_to_string p));
   let res = eval_primitive expr x a b in 
   match res with 
   | Some v -> v
-  | None -> 0.
+  | None -> 
+    let expr = simpl expr in
+    let expr = local_eval expr in
+    let expr' = norm expr true in
+    let t = build_tree expr' x in
+    let restree = eval_tree t x a b in 
+    (match restree with
+    | Some v -> v 
+    | None -> 
+    let p = parts expr x in print_endline ("parts : " ^ (node_to_string p)); 0.)
