@@ -43,7 +43,7 @@ let menu_plot str =
   let e = Parser.expr Lexer.token (Lexing.from_channel str) in
   print_endline "Enter the variable to plot against:";
   let x = read_line () in
-  plot e x
+  plot_expression e x
 
 
 let rec menu () =
