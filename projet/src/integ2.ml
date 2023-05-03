@@ -81,7 +81,11 @@ let eval_primitive expr x a b =
 
 let rec eval_tree tree x a b = 
   match tree with
-  | Leaf e -> eval_primitive e x a b
+  | Leaf e -> let l = eval_primitive e x a b in
+    (match l with
+    | Some n -> Some n
+    | None -> Some (formule e x a b)
+    )
   | Integral (e, x) -> eval_primitive e x a b
   | Internal2 (op, n1, n2) ->
     let n1eval = eval_tree n1 x a b in 
@@ -118,7 +122,7 @@ let integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
     (match restree with
     | Some v -> print_endline "arith_tree"; v 
     | None -> 
-    let p = parts expr x in  
+    let p = parts expr x in
     let resp = eval_tree p x a b in 
     (match resp with
     | Some v -> print_endline "parts"; v 
