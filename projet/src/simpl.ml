@@ -1,5 +1,6 @@
 open Syntax
 open Norm
+open Eval
 
 (*
   The code consists of two main parts, the first one is a set of
@@ -7,6 +8,9 @@ open Norm
   second one is a recursive application of the simplification 
   rules to an expression.
 *)
+
+let simpl_eval expr = 
+  try FloatNum (eval expr) with | _ -> expr
 
 let simpl_arith expr =
   match expr with
@@ -113,7 +117,8 @@ let simpl_trig expr =
   performed.
 *)
 let simplify expr =
-  let expr' = simpl_arith expr in
+  let expr' = simpl_eval expr in
+  let expr' = simpl_arith expr' in
   let expr' = simpl_trig expr' in
   if expr = expr' then expr else expr'
 
