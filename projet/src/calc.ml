@@ -39,20 +39,20 @@ let menu_derive str =
   print_string (to_string result); print_newline ()
 
   let menu_plot str =
-    print_endline "Enter the expression to plot:";
+    print_endline "Entrez l'expression à tracer:";
     let e = Parser.expr Lexer.token (Lexing.from_channel str) in
-    print_endline "Enter the variable to plot against:";
+    print_endline "Entrez la variable:";
     let x = read_line () in
-    print_endline "Do you want to enter custom intervals for the axes? (y/n)";
+    print_endline "Voulez-vous entrer des intervalles personnalisés pour les axes ? (o/n)";
     let custom_intervals = read_line () in
-    if custom_intervals = "y" || custom_intervals = "Y" then (
-      print_endline "Enter the x-axis minimum value:";
+    if custom_intervals = "o" || custom_intervals = "O" then (
+      print_endline "Entrez la valeur minimale de l'axe des x:";
       let x_min = read_float () in
-      print_endline "Enter the x-axis maximum value:";
+      print_endline "Entrez la valeur maximale de l'axe des x:";
       let x_max = read_float () in
-      print_endline "Enter the y-axis minimum value:";
+      print_endline "Entrez la valeur minimale de l'axe des y:";
       let y_min = read_float () in
-      print_endline "Enter the y-axis maximum value:";
+      print_endline "Entrez la valeur maximale de l'axe des y:";
       let y_max = read_float () in
       plot_expression e x x_min x_max y_min y_max
     ) else (
