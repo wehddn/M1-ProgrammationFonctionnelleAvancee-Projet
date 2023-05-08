@@ -67,6 +67,10 @@ let simpl_arith expr =
   | App2(Div, e1, (App2(Mult, e2, e3))) when not (checkNum e2 0) && not (checkNum e3 0) ->
     App2(Mult, (App2(Div, e1, e2)), (App2(Div, e1, e3)))
 
+  (* a*(b/c) = (a*b)/c *)
+  | App2(Mult, e1, App2(Div, e2, e3)) when not (checkNum e3 0) ->
+    App2(Div, App2(Mult, e1, e2), e3)
+
   (* x^0 = 1 *)
   | App2(Expo, e1, e2) when checkNum e2 0 -> Num 1
   
