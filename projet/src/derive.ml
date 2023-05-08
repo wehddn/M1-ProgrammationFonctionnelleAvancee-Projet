@@ -11,6 +11,8 @@ let rec derive e x =
   | Var _ -> Num 0
   (* e est un nombre, la dérivée est 0 *)
   | Num _ -> Num 0
+  (* e est un nombre, la dérivée est 0 *)
+  | FloatNum _ -> Num 0
   (* e est Pi | E, la dérivée est 0 *)
   | App0 _ -> Num 0
   (* e est une opération unaire *)

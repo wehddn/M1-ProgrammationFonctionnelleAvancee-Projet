@@ -36,6 +36,7 @@ let rec count_nodes expr =
   match expr with
   | Var _ -> 1
   | Num _ -> 1
+  | FloatNum _ -> 1
   | App0 _ -> 1
   | App1 (_, e) -> 1 + count_nodes e
   | App2 (_, e1, e2) -> 1 + count_nodes e1 + count_nodes e2
@@ -78,18 +79,19 @@ let cmp e1 e2 =
 
 
 
-let rec to_expr node =
+let rec to_expr node descending =
   match node with
   | Leaf expr -> expr
-  | Internal1 (op, node) -> App1 (op, to_expr node)
+  | Internal1 (op, node) -> App1 (op, to_expr node descending)
   | Internal2 (op, children) ->
-    let exprs = to_expr_list children in
+    let exprs = to_expr_list children descending in
     let exprs = if op = Plus || op = Mult then List.sort cmp exprs else exprs in
+    let exprs = if descending && (op = Plus || op = Mult) then List.rev exprs else exprs in
     match op with
     | op -> appn_helper op exprs
 
-and to_expr_list nodes =
-  List.map (fun node -> to_expr node) nodes
+and to_expr_list nodes descending =
+  List.map (fun node -> to_expr node descending) nodes
 
 and appn_helper op exprs =
   match exprs with
@@ -105,7 +107,7 @@ and appn_helper_helper op remaining_exprs =
   | e1::e2::es -> appn_helper_helper op ((App2 (op, e1, e2))::es)
 
 
-let norm expr = 
+let norm expr descending = 
   let tree = build_tree expr in
-  let res = to_expr tree in
+  let res = to_expr tree descending in
   res

@@ -11,6 +11,8 @@ let rec subst e x e' =
   |Var v -> e
   (* e est un nombre *) 
   |Num n -> e
+  (* e est un nombre *) 
+  |FloatNum n -> e
   (* e est une application d'un opérateur n'ayant pas d'argument  *)
   |App0 op0 -> App0 op0
   (* e est une application d'un opérateur unaire *)
