@@ -48,6 +48,7 @@ let simpl_arith expr =
 
   (* 0 / x = 0 *)
   | App2 (Div, e1, e2) when checkNum e1 0 && not (checkNum e2 0) -> Num 0
+  | App2 (Div, e1, e2) when checkNum e2 0 -> failwith "Division par 0"
 
   (* log(exp(x)) = x *)
   | App1 (Log, App1 (Exp, e)) -> e
@@ -58,12 +59,6 @@ let simpl_arith expr =
   (* a*x*x = a*x^2 *)
   | App2 (Mult, App2 (Mult, e1, e2), e3) when e2 = e3 -> App2 (Mult, e1, App2(Expo, e2, Num 2))
 
-  (* y*1/x = y/x *)
-  | App2(Mult, e1, App2(Div, e2, e3)) when not (checkNum e2 1) && not (checkNum e3 0) = false ->
-    App2(Div, e1, e3)
-  | App2(Mult, App2(Div, e2, e3), e1) when not (checkNum e2 1) && not (checkNum e3 0) ->
-    App2(Div, e1, e3)
-
   (* a/b/c = a/(b*c) *)
   | App2(Div, (App2(Div, e1, e2)), e3) when not (checkNum e2 0) && not (checkNum e3 0) ->
     App2(Div, e1, (App2(Mult, e2, e3)))
@@ -71,6 +66,9 @@ let simpl_arith expr =
   (* a/(b*c) = (a/b)*(a/c) *)
   | App2(Div, e1, (App2(Mult, e2, e3))) when not (checkNum e2 0) && not (checkNum e3 0) ->
     App2(Mult, (App2(Div, e1, e2)), (App2(Div, e1, e3)))
+
+  (* x^0 = 1 *)
+  | App2(Expo, e1, e2) when checkNum e2 0 -> Num 1
   
   (* x^a * x^b = x^(a+b) *)
   | App2(Mult, App2(Expo, e1, e2), App2(Expo, e3, e4)) when e1 = e3 ->
@@ -94,6 +92,9 @@ let simpl_arith expr =
     | Num n -> App2(Mult, e1, FloatNum(1./.(float_of_int n)))
     | FloatNum n -> App2(Mult, e1, FloatNum(1./.n))
     | _ -> expr)
+  
+  (* a ^ b ^ c = a ^ (b*c) *)
+  | App2(Expo, e1, App2(Expo, e2, e3)) -> App2(Expo, e1, App2(Mult, e2, e3))
 
   | _ -> expr
 
