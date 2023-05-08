@@ -12,6 +12,8 @@ open Eval
 let simpl_eval expr = 
   try FloatNum (eval expr) with | _ -> expr
 
+let checkNum e n = if e = Num n || e = FloatNum (float_of_int n) then true else false
+
 let simpl_arith expr =
   match expr with
   (* - - x = x *)
@@ -24,31 +26,58 @@ let simpl_arith expr =
   | App2 (Plus, App1 (UMinus, e1), e2) -> App2 (Minus, e2, e1)
 
   (* 0 + x = 0*)
-  | App2 (Plus, e1, e2) when e1 = Num 0 || e1 = FloatNum 0. -> e2
+  | App2 (Plus, e1, e2) when checkNum e1 0 -> e2
 
   (* x - x = 0 *)
   | App2 (Minus, e1, e2) when e1 = e2 -> Num 0
 
   (* x - 0 = x *)
-  | App2 (Minus, e1, e2) when e2 = Num 0 || e2 = FloatNum 0. -> e1 
+  | App2 (Minus, e1, e2) when checkNum e2 0 -> e1 
 
   (* 0 - x = -x *)
-  | App2 (Minus, e1, e2) when e1 = Num 0 -> App1 (UMinus, e2)
+  | App2 (Minus, e1, e2) when checkNum e1 0 -> App1 (UMinus, e2)
 
   (* 0 * x = 0 *)
-  | App2 (Mult, e1, e2) when e1 = Num 0 -> Num 0
+  | App2 (Mult, e1, e2) when checkNum e1 0 -> Num 0
 
   (* 1 * x = x *)
-  | App2 (Mult, e1, e2) when e1 = Num 1 -> e2
+  | App2 (Mult, e1, e2) when checkNum e1 1 -> e2
 
   (* x / 1 = x *)
-  | App2 (Div, e1, e2) when e2 = Num 1 -> e1
+  | App2 (Div, e1, e2) when checkNum e2 1 -> e1
 
   (* 0 / x = 0 *)
-  | App2 (Div, e1, e2) when e1 = Num 0 && e2 <> Num 0 -> Num 0
+  | App2 (Div, e1, e2) when checkNum e1 0 && not (checkNum e2 0) -> Num 0
 
   (* log(exp(x)) = x *)
-  | App1 (Log, App1 (Exp, e)) -> e 
+  | App1 (Log, App1 (Exp, e)) -> e
+
+  (* x*x = x^2 *)
+  | App2 (Mult, e1, e2) when e1 = e2 -> App2(Expo, e1, Num 2)
+
+  (* a*x*x = a*x^2 *)
+  | App2 (Mult, App2 (Mult, e1, e2), e3) when e2 = e3 -> App2 (Mult, e1, App2(Expo, e2, Num 2))
+
+  (* y*1/x = y/x *)
+  | App2(Mult, e1, App2(Div, e2, e3)) when not (checkNum e2 1) && not (checkNum e3 0) = false ->
+    App2(Div, e1, e3)
+  | App2(Mult, App2(Div, e2, e3), e1) when not (checkNum e2 1) && not (checkNum e3 0) ->
+    App2(Div, e1, e3)
+
+  (* a/b/c = a/(b*c) *)
+  | App2(Div, (App2(Div, e1, e2)), e3) when not (checkNum e2 0) && not (checkNum e3 0) ->
+    App2(Div, e1, (App2(Mult, e2, e3)))
+
+  (* a/(b*c) = (a/b)*(a/c) *)
+  | App2(Div, e1, (App2(Mult, e2, e3))) when not (checkNum e2 0) && not (checkNum e3 0) ->
+    App2(Mult, (App2(Div, e1, e2)), (App2(Div, e1, e3)))
+
+  (* x/a = x*(1/a) *)
+  | App2(Div, e1, e2) -> 
+    (match e2 with
+    | Num n -> App2(Mult, e1, FloatNum(1./.(float_of_int n)))
+    | FloatNum n -> App2(Mult, e1, FloatNum(1./.n))
+    | _ -> expr)
 
   | _ -> expr
 
@@ -123,7 +152,6 @@ let simplify expr =
   if expr = expr' then expr else expr'
 
 let rec simpl_aux expr = 
-  
   let expr = simplify expr in
   match expr with
   | Num _ -> expr
@@ -156,6 +184,6 @@ let simpl expr =
     let expr_norm = norm expr false in
     let res = aux expr_norm (count_nodes expr_norm) in
     let new_count = count_nodes res in
-    if new_count < node_count then aux' res new_count else res
+    if new_count < node_count || res <> expr then aux' res new_count else res
   in
   aux' expr (count_nodes expr)
