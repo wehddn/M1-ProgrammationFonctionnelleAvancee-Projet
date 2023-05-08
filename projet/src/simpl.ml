@@ -71,7 +71,23 @@ let simpl_arith expr =
   (* a/(b*c) = (a/b)*(a/c) *)
   | App2(Div, e1, (App2(Mult, e2, e3))) when not (checkNum e2 0) && not (checkNum e3 0) ->
     App2(Mult, (App2(Div, e1, e2)), (App2(Div, e1, e3)))
+  
+  (* x^a * x^b = x^(a+b) *)
+  | App2(Mult, App2(Expo, e1, e2), App2(Expo, e3, e4)) when e1 = e3 ->
+    App2(Expo, e1, App2(Plus, e2, e4))
+  | App2(Mult, e1, App2(Expo, e3, e4)) when e1 = e3 ->
+    App2(Expo, e1, App2(Plus, Num 1, e4))
+  | App2(Mult, App2(Expo, e1, e2), e3) when e1 = e3 ->
+    App2(Expo, e1, App2(Plus, e2, Num 1))
 
+  (* x^a / x^b = x^(a-b) *)
+  | App2(Div, App2(Expo, e1, e2), App2(Expo, e3, e4)) when e1 = e3 ->
+    App2(Expo, e1, App2(Minus, e2, e4))
+  | App2(Mult, e1, App2(Expo, e3, e4)) when e1 = e3 ->
+    App2(Expo, e1, App2(Minus, Num 1, e4))
+  | App2(Mult, App2(Expo, e1, e2), e3) when e1 = e3 ->
+    App2(Expo, e1, App2(Minus, e2, Num 1))
+  
   (* x/a = x*(1/a) *)
   | App2(Div, e1, e2) -> 
     (match e2 with
