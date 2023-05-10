@@ -188,16 +188,6 @@ let rec simpl_aux expr =
   | App1 (op, e) -> App1 (op, simpl_aux e)
   | App2 (op, e1, e2) -> App2 (op, simpl_aux e1, simpl_aux e2) 
 
-let rec count_nodes expr =
-  match expr with
-  | Var _ -> 1
-  | Num _ -> 1
-  | FloatNum _ -> 1
-  | App0 _ -> 1
-  | App1 (_, e) -> 1 + count_nodes e
-  | App2 (_, e1, e2) -> 1 + count_nodes e1 + count_nodes e2
-
-
 module ExprSet = Set.Make(struct
   type t = expr
   let compare = Norm.cmp
@@ -207,8 +197,7 @@ let diff2 set set1 set2 =
   ExprSet.diff (ExprSet.diff set set1) set2
 
 (*
-  The function returns the simplified expression with the 
-  smallest number of nodes.
+  The function returns the smallest simplified expression
 *)
 let simpl expr =
   let rec aux set set_processed =
