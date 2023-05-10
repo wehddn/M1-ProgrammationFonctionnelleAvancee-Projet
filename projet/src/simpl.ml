@@ -1,6 +1,7 @@
 open Syntax
 open Norm
 open Eval
+open Set
 
 (*
   The code consists of two main parts, the first one is a set of
@@ -71,8 +72,19 @@ let simpl_arith expr =
   | App2(Mult, e1, App2(Div, e2, e3)) when not (checkNum e3 0) ->
     App2(Div, App2(Mult, e1, e2), e3)
 
+  (* (a/b)*c = (a*c)/b *)
+  | App2(Mult, App2(Div, e1, e2), e3) when not (checkNum e2 0) -> 
+    App2(Div, App2(Mult, e1, e3), e2)
+  
+  (* (a*b)/c = a*(b/c) *)
+  | App2(Div, App2(Mult, e1, e2), e3) when not (checkNum e2 0) -> 
+    App2(Mult, e1, App2(Div, e2, e3))
+
   (* x^0 = 1 *)
   | App2(Expo, e1, e2) when checkNum e2 0 -> Num 1
+
+  (* x^1 = x *)
+  | App2(Expo, e1, e2) when checkNum e2 1 -> e1
   
   (* x^a * x^b = x^(a+b) *)
   | App2(Mult, App2(Expo, e1, e2), App2(Expo, e3, e4)) when e1 = e3 ->
@@ -85,19 +97,13 @@ let simpl_arith expr =
   (* x^a / x^b = x^(a-b) *)
   | App2(Div, App2(Expo, e1, e2), App2(Expo, e3, e4)) when e1 = e3 ->
     App2(Expo, e1, App2(Minus, e2, e4))
-  | App2(Mult, e1, App2(Expo, e3, e4)) when e1 = e3 ->
+  | App2(Div, e1, App2(Expo, e3, e4)) when e1 = e3 ->
     App2(Expo, e1, App2(Minus, Num 1, e4))
-  | App2(Mult, App2(Expo, e1, e2), e3) when e1 = e3 ->
+  | App2(Div, App2(Expo, e1, e2), e3) when e1 = e3 ->
     App2(Expo, e1, App2(Minus, e2, Num 1))
   
-  (* x/a = x*(1/a) *)
-  | App2(Div, e1, e2) -> 
-    (match e2 with
-    | Num n -> App2(Mult, e1, FloatNum(1./.(float_of_int n)))
-    | FloatNum n -> App2(Mult, e1, FloatNum(1./.n))
-    | _ -> expr)
-  
   (* a ^ b ^ c = a ^ (b*c) *)
+  | App2(Expo, App2(Expo, e1, e2), e3)
   | App2(Expo, e1, App2(Expo, e2, e3)) -> App2(Expo, e1, App2(Mult, e2, e3))
 
   | _ -> expr
@@ -191,20 +197,34 @@ let rec count_nodes expr =
   | App1 (_, e) -> 1 + count_nodes e
   | App2 (_, e1, e2) -> 1 + count_nodes e1 + count_nodes e2
 
+
+module ExprSet = Set.Make(struct
+  type t = expr
+  let compare = Norm.cmp
+end)
+
+let diff2 set set1 set2 =
+  ExprSet.diff (ExprSet.diff set set1) set2
+
 (*
   The function returns the simplified expression with the 
   smallest number of nodes.
 *)
 let simpl expr =
-  let rec aux expr node_count =
-    let res = simpl_aux expr in
-    let new_count = count_nodes res in
-    if new_count < node_count then aux res new_count else res
+  (* add normalization to each value in set, but not add if exist in set/set_processed *)
+  (* after all, retrun min value *)  
+  let rec aux set set_processed =
+    let set_norm = ExprSet.map (fun x -> norm x false) set in
+    let set_norm = ExprSet.diff set_norm set_processed in
+    let set = ExprSet.union set set_norm in
+    let set_simplify = ExprSet.map simpl_aux set in
+    let set_simplify = ExprSet.diff set_simplify set_norm in
+    let set_simplify = ExprSet.diff set_simplify set_processed in
+    let set_processed = ExprSet.union set_processed set in
+    if ExprSet.is_empty set_simplify then set_processed else aux set_simplify set_processed
   in
-  let rec aux' expr node_count =
-    let expr_norm = norm expr false in
-    let res = aux expr_norm (count_nodes expr_norm) in
-    let new_count = count_nodes res in
-    if new_count < node_count || res <> expr then aux' res new_count else res
-  in
-  aux' expr (count_nodes expr)
+  
+  let set = ExprSet.empty in
+  let set = ExprSet.add expr set in
+  let res = aux set ExprSet.empty in
+  ExprSet.min_elt res
