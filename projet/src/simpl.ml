@@ -211,8 +211,6 @@ let diff2 set set1 set2 =
   smallest number of nodes.
 *)
 let simpl expr =
-  (* add normalization to each value in set, but not add if exist in set/set_processed *)
-  (* after all, retrun min value *)  
   let rec aux set set_processed =
     let set_norm = ExprSet.map (fun x -> norm x false) set in
     let set_norm = ExprSet.diff set_norm set_processed in
