@@ -193,14 +193,13 @@ let simpl expr =
   in
 
   let rec simpl_aux expr = 
-    let expr = simplify expr in
     match expr with
     | Num _ -> expr
     | FloatNum _ -> expr
     | Var _ -> expr
     | App0 _ -> expr 
     | App1 (op, e) -> App1 (op, simpl_aux e)
-    | App2 (op, e1, e2) -> App2 (op, simpl_aux e1, simpl_aux e2) 
+    | App2 (op, e1, e2) -> simplify (App2 (op, simpl_aux (simplify e1), simpl_aux (simplify e2)))
   in
 
   let diff2 set set1 set2 =
