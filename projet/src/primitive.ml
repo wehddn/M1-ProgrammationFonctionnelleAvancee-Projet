@@ -26,4 +26,5 @@ let rec primitive (expr : expr) (x : expr) =
   | App2(Div, Num 1, App2(Plus, Num 1, App2(Expo, e, Num 2))) when e = x -> App1(ATan, e)
   (* 1/(sqrt(1-x^2)) *)
   | App2(Div, Num 1, App1(Sqrt, App2(Minus, Num 1, App2(Expo, e, Num 2)))) when e = x -> App1(ASin, e)
+  | App1(UMinus, e) -> App1(UMinus, primitive e x)
   | _ -> expr
