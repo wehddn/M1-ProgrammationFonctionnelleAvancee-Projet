@@ -211,7 +211,7 @@ let simpl expr =
   *)
 
   let rec aux set set_processed =
-    let set_norm = ExprSet.map (fun x -> norm x false) set in
+    let set_norm = ExprSet.map (fun x -> norm x) set in
     let set_norm = ExprSet.diff set_norm set_processed in
     let set = ExprSet.union set set_norm in
     let set_simplify = ExprSet.map simpl_aux set in
