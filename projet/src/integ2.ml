@@ -133,6 +133,9 @@ let rec eval_tree tree x a b arith =
     )
   in
 
+(* When integrating in parts, u is usually taken as such a function,
+   which after differentiation will become simpler. Therefore, we do
+   not just apply the method, but consider various expressions. *)
 let rec parts expr x =
   match expr with 
   | App1 (Log, e) when Syntax.to_string e = x ->
