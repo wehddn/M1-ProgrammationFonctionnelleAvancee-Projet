@@ -191,4 +191,16 @@ let rec parts expr x =
     let resp = eval_tree p x a b false in 
     (match resp with
     | Some v -> print_endline "parts"; v 
-    | None -> failwith "Can't evaluate" ))
+    | None -> 
+      let aeval = eval a in
+      let beval = eval b in
+      let n = 100 in
+      let h = (beval -. aeval) /. (float_of_int n) in
+      let rec left_rectangles i sum = 
+        if i > n then sum else
+          (let v = aeval +. ((float_of_int i) -. 0.5) *. h in
+          let y = eval (subst expr x (FloatNum v)) in
+          left_rectangles (i + 1) (sum +. y)) in
+        let res = h *. (left_rectangles 1 0.0) in
+        print_endline "left rectangles"; res
+        ))
