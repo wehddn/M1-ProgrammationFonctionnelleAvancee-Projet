@@ -15,7 +15,7 @@ type t = expr
 let compare = Norm.cmp
 end)
 
-let simpl expr =
+let simpl_intern expr withApp0 =
 
   let simpl_eval expr = 
     try FloatNum (eval expr) with | _ -> expr
@@ -185,21 +185,21 @@ let simpl expr =
     returns the simplified expression if any simplification was 
     performed.
   *)
-  let simplify expr =
-    let expr' = simpl_eval expr in
-    let expr' = simpl_arith expr' in
+  let simplify expr withApp0 =
+    let expr' = if withApp0 then simpl_eval expr else expr in
+    let expr' = simpl_arith expr in
     let expr' = simpl_trig expr' in
     if expr = expr' then expr else expr'
   in
 
-  let rec simpl_aux expr = 
+  let rec simpl_aux expr withApp0 = 
     match expr with
     | Num _ -> expr
     | FloatNum _ -> expr
     | Var _ -> expr
     | App0 _ -> expr 
-    | App1 (op, e) -> App1 (op, simpl_aux e)
-    | App2 (op, e1, e2) -> simplify (App2 (op, simpl_aux (simplify e1), simpl_aux (simplify e2)))
+    | App1 (op, e) -> App1 (op, simpl_aux e withApp0)
+    | App2 (op, e1, e2) -> simplify (App2 (op, simpl_aux (simplify e1 withApp0) withApp0, simpl_aux (simplify e2 withApp0) withApp0)) withApp0
   in
 
   let diff2 set set1 set2 =
@@ -214,7 +214,7 @@ let simpl expr =
     let set_norm = ExprSet.map (fun x -> norm x) set in
     let set_norm = ExprSet.diff set_norm set_processed in
     let set = ExprSet.union set set_norm in
-    let set_simplify = ExprSet.map simpl_aux set in
+    let set_simplify = ExprSet.map (fun x -> simpl_aux x withApp0) set  in
     let set_simplify = ExprSet.diff set_simplify set_norm in
     let set_simplify = ExprSet.diff set_simplify set_processed in
     let set_processed = ExprSet.union set_processed set in
@@ -225,3 +225,7 @@ let simpl expr =
   let set = ExprSet.add expr set in
   let res = aux set ExprSet.empty in
   ExprSet.min_elt res
+
+let simpl expr = simpl_intern expr true
+
+let simpl_integ expr = simpl_intern expr false
