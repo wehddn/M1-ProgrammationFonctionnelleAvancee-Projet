@@ -6,17 +6,29 @@ open Simpl
 open Norm
 open Derive
 
+(*
+  The "formula" in the code refers to the Fundamental theorem of calculus,
+  integ f(x)dx from a to b = F(b) - F(a)   
+*)
+
 type integral = expr * string
 
+(* 
+  We use this type to store different kinds of expressions together 
+  For example, this will allow to store an expression during integration by parts, 
+  where one part must be calculated by the formula, and the other is an integral.
+  The Number node is used when taking constants out of the integral
+*)
 type node =
-  | Error of expr
-  | Number of expr
-  | Formule of expr
+  | Error of expr                   (* Expressions that cannot be evaluated *)
+  | Number of expr                  (* Float or integer numbers *)
+  | Formule of expr                 (* Expressions that must be calculated by the formula *)
   | Integral of integral
   | Internal2 of op2 * node * node
 
 let rec integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
 
+(* Local evaluation to eliminate arithmetic operations with constants *)
 let rec local_eval expr = 
   match expr with
   | Num n -> expr
@@ -38,6 +50,8 @@ let rec local_eval expr =
                             with | _ -> App2(op, e1localeval, e2localeval))))
   in
 
+(* Building a tree to apply the linearity rule 
+   (multiplication by a number and the sum of integrals) *)
 let rec arith_tree expr x =
   let expr = replace_minus expr in
   match expr with
@@ -86,12 +100,14 @@ and integral_to_string i =
   let expr, str = i in (Syntax.to_string expr) ^ " d" ^ str 
   in
 
+(* Application of the formula *)
 let formule pexpr (x : string) a b = 
   let saexpr = subst pexpr x a in
   let sbexpr = subst pexpr x b in
   eval sbexpr -. eval saexpr 
 in
 
+(* Application of the antiderivative from the table *)
 let eval_primitive expr x a b =
   let pexpr = primitive expr (Light.(Var x)) in
   if expr <> pexpr then Some (formule pexpr x a b) else None
@@ -104,7 +120,7 @@ let rec eval_tree tree x a b arith =
     (match l with
     | Some v -> Some v
     | None -> Some (formule e x a b)
-    )
+    ) (* TODO check *)
   | Formule e -> Some (formule e x a b)
   | Integral (e, x) -> if arith then eval_primitive e x a b else Some (integ e x a b)
   | Internal2 (op, n1, n2) ->
@@ -137,7 +153,7 @@ let rec parts expr x =
   | Some v -> print_endline "primitives"; v
   | None -> 
     let expr = local_eval expr in
-    let expr' = norm expr true in
+    let expr' = simpl expr in
     let t = arith_tree expr' x in
     let restree = eval_tree t x a b true in 
     (match restree with
