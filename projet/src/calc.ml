@@ -7,7 +7,6 @@ open Integ
 open Plot
 open Graphics
 
-
 let last_result = ref None
 
 let parse_expression str =
@@ -126,32 +125,42 @@ let rec menu () =
   print_endline "5. Integrale";
   print_endline "6. Plot";
   print_endline "0. Exit";
-  match read_int () with
-  | 0 -> print_endline "Exiting..."
-  | 1 -> 
-    print_endline "Evaluate : ";
-    menu_evaluate stdin;
-    menu ()
-  | 2 -> 
-    print_endline "Simplify : ";
-    menu_simpl stdin;
-    menu ()
-  | 3 ->
-    print_endline "Substitute :";
-    menu_subst stdin;
-    menu ()
-  |4 -> 
-    print_endline "Derive :";
-    menu_derive stdin;
-    menu ()
-  | 5 -> 
-    print_endline "Integrate :";
-    menu_integ stdin;
-  | 6 -> 
-    print_endline "Plot :";
-    menu_plot stdin;
-    menu ()
-  | _ -> print_endline "Invalid choice"; menu ()
+  try
+    match read_int () with
+    | 0 -> print_endline "Exiting..."
+    | 1 -> 
+      print_endline "Evaluate : ";
+      menu_evaluate stdin;
+      menu ()
+    | 2 -> 
+      print_endline "Simplify : ";
+      menu_simpl stdin;
+      menu ()
+    | 3 ->
+      print_endline "Substitute :";
+      menu_subst stdin;
+      menu ()
+    |4 -> 
+      print_endline "Derive :";
+      menu_derive stdin;
+      menu ()
+    | 5 -> 
+      print_endline "Integrate :";
+      menu_integ stdin;
+    | 6 -> 
+      print_endline "Plot :";
+      menu_plot stdin;
+      menu ()
+    | _ -> print_endline "Invalid choice"; menu ()
+    with 
+    | Failure s -> 
+      (match s with
+        | "int_of_string" -> print_endline "Invalid choice"
+        | s -> print_endline s
+      ); menu()
+    | Dune__exe__Lexer.Error s -> print_endline ("Can't process symbol " ^ s); menu ()
+    | Dune__exe__Parser.Error -> print_endline "Can't process expression"; menu ()
+    | _ -> menu ()
   
 let () =  
     menu ();;
