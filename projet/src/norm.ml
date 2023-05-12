@@ -68,12 +68,13 @@ let cmp e1 e2 =
     let e2_str = Syntax.to_string e2_norm in
     (match compare_str () with 
     | 0 -> 
-      if e1 = App1 (UMinus, e1_norm) then
-        1
-      else if e2 = App1 (UMinus, e2_norm) then 
-        -1 
-      else
-        0
+      (
+        match e1, e2 with
+        | App1 (UMinus, e1_norm), App1 (UMinus, e2_norm) -> 0
+        | App1 (UMinus, e1_norm), e2_norm -> -1
+        | e1_norm, App1 (UMinus, e2_norm) -> 1
+        | e1_norm, e2_norm -> 0
+      )
     | n -> n) 
   | n -> n
 
