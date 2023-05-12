@@ -138,36 +138,40 @@ let rec eval_tree tree x a b arith =
     )
   in
 
+let parts_aux u dv = 
+  let du = derive u x in
+  let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
+  Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
+  in
+
 (* When integrating in parts, u is usually taken as such a function,
    which after differentiation will become simpler. Therefore, we do
    not just apply the method, but consider various expressions. *)
 let rec parts expr x =
   match expr with 
+  (* expressions with log *)
   | App1 (Log, e) when Syntax.to_string e = x ->
     parts (App2 (Mult, Num 1, App1 (Log, e))) x
   | App2 (Mult, e1, App1 (Log, e2))
   | App2 (Mult, App1 (Log, e2), e1) ->
-    let u = (App1 (Log, e2)) in
-    let du = derive u x in
-    let dv = e1 in
-    let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
-    Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
+    parts_aux (App1 (Log, e2)) e1
 
+  (* expressions with e^x *)
   | App2 (Mult, e1, App2(Expo, App0(E), e2))
   | App2 (Mult, App2(Expo, App0(E), e2), e1) ->
-    let u = e1 in
-    let du = derive u x in
-    let dv = App2(Expo, App0(E), e2) in
-    let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
-    Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
-
+    parts_aux e1 (App2(Expo, App0(E), e2))
+  
+  (* expressions with trig *)
+  | App1 (trig, e) when Syntax.to_string e = x ->
+    parts (App2 (Mult, Num 1, App1 (trig, e))) x
   | App2 (Mult, e1, App1(trig, e2))
   | App2 (Mult, App1(trig, e2), e1) ->
-    let u = e1 in
-    let du = derive u x in
-    let dv = App1(trig, e2) in
-    let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
-    Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
+    parts_aux e1 (App1(trig, e2))
+    
+  (* other expressions *)
+  | App2 (Mult, e1, e2) ->
+    parts_aux e1 e2
+    
   | _ -> Error expr
   in
 
