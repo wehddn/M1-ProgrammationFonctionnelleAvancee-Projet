@@ -26,6 +26,8 @@ type node =
   | Integral of integral
   | Internal2 of op2 * node * node
 
+type trig = Sin | Cos | Tan | ASin | ACos | ATan
+
 let rec integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
 
 (* Local evaluation to eliminate arithmetic operations with constants *)
@@ -150,6 +152,7 @@ let rec parts expr x =
     let dv = e1 in
     let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
     Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
+
   | App2 (Mult, e1, App2(Expo, App0(E), e2))
   | App2 (Mult, App2(Expo, App0(E), e2), e1) ->
     let u = e1 in
@@ -157,7 +160,15 @@ let rec parts expr x =
     let dv = App2(Expo, App0(E), e2) in
     let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
     Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
-  | _ -> print_endline (Syntax.to_string expr); Error expr
+
+  | App2 (Mult, e1, App1(trig, e2))
+  | App2 (Mult, App1(trig, e2), e1) ->
+    let u = e1 in
+    let du = derive u x in
+    let dv = App1(trig, e2) in
+    let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
+    Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
+  | _ -> Error expr
   in
 
   let expr = simpl_integ expr in
