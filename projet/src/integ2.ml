@@ -9,8 +9,9 @@ open Derive
 type integral = expr * string
 
 type node =
-  | Leaf of expr
-  | Expr of expr
+  | Error of expr
+  | Number of expr
+  | Formule of expr
   | Integral of integral
   | Internal2 of op2 * node * node
 
@@ -44,10 +45,16 @@ let rec arith_tree expr x =
     let e1type = (match e1 with | FloatNum _ | Num _ -> true | _ -> false) in
     let e2type = (match e2 with | FloatNum _ | Num _ -> true | _ -> false) in
     (match e1type, e2type with
-    | true, true -> Expr (local_eval (App2 (op, e1, e2)))
-    | true, false -> Internal2 (op, Expr e1, arith_tree e2 x)
-    | false, true -> Internal2 (op, arith_tree e1 x, Expr e2)
+    | true, true -> Number (local_eval (App2 (op, e1, e2)))
+    | true, false -> Internal2 (op, Number e1, arith_tree e2 x)
+    | false, true -> Internal2 (op, arith_tree e1 x, Number e2)
     | false, false -> Integral (App2 (op, e1, e2), x)
+    )
+  | App2 (op, e1, e2) when op == Div ->
+    let e2type = (match e2 with | FloatNum _ | Num _ -> true | _ -> false) in
+    (match e2type with
+    | true -> Internal2 (op, arith_tree e1 x, Number e2)
+    | false -> Integral (App2 (op, e1, e2), x)
     ) 
   | App2 (op, e1, e2) when op == Plus ->
     Internal2 (op, arith_tree e1 x, arith_tree e2 x)
@@ -64,10 +71,12 @@ in
 
 let rec node_to_string n =
   match n with
-  | Leaf e -> 
-    "Leaf(" ^ (Syntax.to_string e) ^ ")"
-  | Expr e ->
-    "Expr(" ^ (Syntax.to_string e) ^ ")"
+  | Error e -> 
+    "Error(" ^ (Syntax.to_string e) ^ ")"
+  | Number e ->
+    "Number(" ^ (Syntax.to_string e) ^ ")"
+  | Formule e ->
+    "Formule(" ^ (Syntax.to_string e) ^ ")"
   | Integral i ->
     "Integral(" ^ integral_to_string i ^ ")"
   | Internal2 (op, n1, n2) ->
@@ -90,18 +99,20 @@ in
 
 let rec eval_tree tree x a b arith = 
   match tree with
-  | Leaf _ -> None
-  | Expr e -> let l = eval_primitive e x a b in
-  (match l with
-  | Some v -> Some v
-  | None -> Some (formule e x a b)
-  )
+  | Error _ -> None
+  | Number e -> let l = eval_primitive e x a b in
+    (match l with
+    | Some v -> Some v
+    | None -> Some (formule e x a b)
+    )
+  | Formule e -> Some (formule e x a b)
   | Integral (e, x) -> if arith then eval_primitive e x a b else Some (integ e x a b)
   | Internal2 (op, n1, n2) ->
     let n1eval = eval_tree n1 x a b arith in 
     let n2eval = eval_tree n2 x a b arith in
     (match n1eval, n2eval with
-    | Some x, Some y -> Some (eval (App2(op, FloatNum x, FloatNum y)))
+    | Some x, Some y -> 
+      Some (eval (App2(op, FloatNum x, FloatNum y)))
     | _ -> None 
     )
   in
@@ -116,16 +127,15 @@ let rec parts expr x =
     let du = derive u x in
     let dv = e1 in
     let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
-    Internal2 (Minus, Internal2(Mult, Expr u, Expr v), Integral (App2(Mult, v, du), x))
-  | _ -> Leaf expr
+    Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
+  | _ -> Error expr
   in
 
+  let expr = simpl expr in
   let res = eval_primitive expr x a b in 
-  let expr = simpl expr in print_endline (Syntax.to_string expr);
   match res with 
   | Some v -> print_endline "primitives"; v
   | None -> 
-    let expr = simpl expr in
     let expr = local_eval expr in
     let expr' = norm expr true in
     let t = arith_tree expr' x in
@@ -134,7 +144,7 @@ let rec parts expr x =
     | Some v -> print_endline "arith_tree"; v 
     | None -> 
     let p = parts expr x in
-    let resp = eval_tree p x a b false in print_endline (node_to_string (p));
+    let resp = eval_tree p x a b false in 
     (match resp with
     | Some v -> print_endline "parts"; v 
     | None -> failwith "Can't evaluate" ))
