@@ -49,11 +49,11 @@ let menu_subst str =
   | None -> ()  (* Aucun dernier résultat disponible *)
   in
   print_endline "Saisir l'expression à remplacer";
-  let e = Parser.expr Lexer.token (Lexing.from_channel str) in
+  let e = parse_expression str in
   print_endline "Entrer la variable à remplacer";
   let x = read_line () in
   print_endline "Saisir l'expression remplaçante";
-  let e' = Parser.expr Lexer.token (Lexing.from_channel str) in
+  let e' = parse_expression str in
   let result = subst e x e' in
   last_result := Some result;  (* Stocker le dernier résultat *)
   print_string (to_string result); print_newline ()
@@ -67,7 +67,7 @@ let menu_derive str =
   | None -> ()  (* Aucun dernier résultat disponible *)
   in
   print_endline "Saisir l'expression à dériver";
-  let e = Parser.expr Lexer.token (Lexing.from_channel str) in
+  let e = parse_expression str in
   print_endline "Entrer la variable par rapport à laquelle dériver";
   let x = read_line () in
   let result = derive e x in
@@ -76,13 +76,13 @@ let menu_derive str =
 
   let menu_integ str =
     print_endline "Saisir l'expression à intégrer";
-    let e = Parser.expr Lexer.token (Lexing.from_channel str) in
+    let e = parse_expression str in
     print_endline "Entrer la variable d'intégration";
     let x = read_line () in
     print_endline "Entrer la borne inférieure";
-    let a = Parser.expr Lexer.token (Lexing.from_channel str) in
+    let a = parse_expression str in
     print_endline "Entrer la borne supérieure";
-    let b = Parser.expr Lexer.token (Lexing.from_channel str) in
+    let b = parse_expression str in
     let result = integ e x a b in
     print_float result; print_newline () 
   
@@ -95,7 +95,7 @@ let menu_plot str =
   | None -> ()  (* Aucun dernier résultat disponible *)
   in
   print_endline "Entrez l'expression à tracer:";
-  let e = Parser.expr Lexer.token (Lexing.from_channel str) in
+  let e = parse_expression str in
   print_endline "Entrez la variable:";
   let x = read_line () in
   print_endline "Voulez-vous entrer des intervalles personnalisés pour les axes ? (o/n)";
