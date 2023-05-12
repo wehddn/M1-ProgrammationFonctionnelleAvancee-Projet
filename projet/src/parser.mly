@@ -36,4 +36,3 @@ c:
   | PLOT LPARA e1=e COL v1=IDENT RPARA {Plot(e1,v1)}
   | INTEG LPARA e1=e COL v1=IDENT COL lower=e COL upper=e RPARA
       {Integ(e1,v1,lower,upper)}
-
