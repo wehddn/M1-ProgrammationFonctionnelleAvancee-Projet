@@ -34,7 +34,7 @@ let rec local_eval expr =
   | Num n -> expr
   | FloatNum n -> expr
   | Var v -> expr
-  | App0 e -> FloatNum (eval (App0 e))
+  | App0 e -> expr
   | App1(op, e1) ->
     let e1localeval = local_eval e1 in
     (try FloatNum (eval (App1(op, e1localeval))) with | _ -> App1(op, e1))
@@ -109,8 +109,11 @@ in
 
 (* Application of the antiderivative from the table *)
 let eval_primitive expr x a b =
+  match expr with
+  | (App2(Expo, App0(E), e)) when (match e with | Var _ -> true | _ -> false)-> Some (formule expr x a b)
+  | _ ->
   let pexpr = primitive expr (Light.(Var x)) in
-  if expr <> pexpr then Some (formule pexpr x a b) else None
+  if expr <> pexpr || expr == Light.(e ^ Var "x") then Some (formule pexpr x a b) else None
 in
 
 let rec eval_tree tree x a b arith = 
@@ -147,16 +150,23 @@ let rec parts expr x =
     let dv = e1 in
     let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
     Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
-  | _ -> Error expr
+  | App2 (Mult, e1, App2(Expo, App0(E), e2))
+  | App2 (Mult, App2(Expo, App0(E), e2), e1) ->
+    let u = e1 in
+    let du = derive u x in
+    let dv = App2(Expo, App0(E), e2) in
+    let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
+    Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
+  | _ -> print_endline (Syntax.to_string expr); Error expr
   in
 
-  let expr = simpl expr in
+  let expr = simpl_integ expr in
   let res = eval_primitive expr x a b in 
   match res with 
   | Some v -> print_endline "primitives"; v
   | None -> 
     let expr = local_eval expr in
-    let expr' = simpl expr in
+    let expr' = simpl_integ expr in
     let t = arith_tree expr' x in
     let restree = eval_tree t x a b true in 
     (match restree with
