@@ -3,7 +3,7 @@ open Eval
 open Simpl
 open Subst
 open Derive
-open Integ2
+open Integ
 
 
 let parse_expression str =
