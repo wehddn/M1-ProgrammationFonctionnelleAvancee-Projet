@@ -178,19 +178,19 @@ let rec parts expr x =
   let expr = simpl_integ expr in
   let res = eval_primitive expr x a b in 
   match res with 
-  | Some v -> print_endline "primitives"; v
+  | Some v -> v
   | None -> 
     let expr = local_eval expr in
     let expr' = simpl_integ expr in
     let t = arith_tree expr' x in
     let restree = eval_tree t x a b true in 
     (match restree with
-    | Some v -> print_endline "arith_tree"; v 
+    | Some v -> v 
     | None -> 
     let p = parts expr x in
     let resp = eval_tree p x a b false in 
     (match resp with
-    | Some v -> print_endline "parts"; v 
+    | Some v -> v 
     | None -> 
       let aeval = eval a in
       let beval = eval b in
@@ -202,5 +202,5 @@ let rec parts expr x =
           let y = eval (subst expr x (FloatNum v)) in
           left_rectangles (i + 1) (sum +. y)) in
         let res = h *. (left_rectangles 1 0.0) in
-        print_endline "left rectangles"; res
+        res
         ))
