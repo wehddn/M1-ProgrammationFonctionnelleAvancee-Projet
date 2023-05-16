@@ -9,13 +9,7 @@ type t = expr
 let compare = Norm.cmp
 end)
 
-let simpl_intern expr withApp0 =
-
-  (* Simplifying expressions that can be evaluated *)
-  let simpl_eval expr = 
-    try FloatNum (eval expr) with | _ -> expr
-  in
-
+let simpl expr =
   let checkNum e n = if e = Num n || e = FloatNum (float_of_int n) then true else false
   in
 
@@ -52,11 +46,14 @@ let simpl_intern expr withApp0 =
     (* x / 1 = x *)
     | App2 (Div, e1, e2) when checkNum e2 1 -> e1
 
-    (* 0 / x = 0 *)
-    | App2 (Div, e1, e2) when checkNum e1 0 && not (checkNum e2 0) -> Num 0
-
     (* x / 0 -> error *)
     | App2 (Div, e1, e2) when checkNum e2 0 -> failwith "Division par 0"
+
+    (* 0 / x = 0 *)
+    | App2 (Div, e1, e2) when checkNum e1 0 -> Num 0
+
+    (* x / x = 1 *)
+    | App2 (Div, e1, e2) when e1 = e2 -> Num 1
 
     (* log(exp(x)) = x *)
     | App1 (Log, App1 (Exp, e)) -> e
@@ -112,6 +109,15 @@ let simpl_intern expr withApp0 =
     (* a ^ b ^ c = a ^ (b*c) *)
     | App2(Expo, App2(Expo, e1, e2), e3)
     | App2(Expo, e1, App2(Expo, e2, e3)) -> App2(Expo, e1, App2(Mult, e2, e3))
+
+    (* sqrt(a) * sqrt(b) = sqrt(a*b) *)
+    | App2(Mult, App1(Sqrt, e1), App1(Sqrt, e2)) -> App1(Sqrt, App2(Mult, e1, e2))
+
+    (* sqrt(a) / sqrt(b) = sqrt(a/b) *)
+    | App2(Div, App1(Sqrt, e1), App1(Sqrt, e2)) -> App1(Sqrt, App2(Div, e1, e2))
+
+    (* sqrt(x)^y = sqrt(x^y)*)
+    | App2(Expo, App1(Sqrt, e1), e2) -> App1(Sqrt, App2(Expo, e1, e2))
 
     | _ -> expr
   in
@@ -184,21 +190,20 @@ let simpl_intern expr withApp0 =
     returns the simplified expression if any simplification was 
     performed.
   *)
-  let simplify expr withApp0 =
-    let expr' = if withApp0 then simpl_eval expr else expr in
-    let expr' = simpl_arith expr' in
+  let simplify expr  =
+    let expr' = simpl_arith expr in
     let expr' = simpl_trig expr' in
     if expr = expr' then expr else expr'
   in
 
-  let rec simpl_aux expr withApp0 = 
+  let rec simpl_aux expr  = 
     match expr with
     | Num _ -> expr
     | FloatNum _ -> expr
     | Var _ -> expr
     | App0 _ -> expr 
-    | App1 (op, e) -> App1 (op, simpl_aux e withApp0)
-    | App2 (op, e1, e2) -> simplify (App2 (op, simpl_aux (simplify e1 withApp0) withApp0, simpl_aux (simplify e2 withApp0) withApp0)) withApp0
+    | App1 (op, e) -> simplify (App1 (op, simpl_aux e))
+    | App2 (op, e1, e2) -> simplify (App2 (op, simpl_aux (simplify e1), simpl_aux (simplify e2))) 
   in
 
   let diff2 set set1 set2 =
@@ -214,7 +219,7 @@ let simpl_intern expr withApp0 =
     let set_norm = ExprSet.diff set_norm set_processed in
     let set = ExprSet.union set set_norm in
     (* Apply simplification to each expression and exclude the original and processed ones *)
-    let set_simplify = ExprSet.map (fun x -> simpl_aux x withApp0) set  in
+    let set_simplify = ExprSet.map (fun x -> simpl_aux x ) set  in
     let set_simplify = ExprSet.diff set_simplify set_norm in
     let set_simplify = ExprSet.diff set_simplify set_processed in
     (* Add the original expressions to the processed ones *)
@@ -229,7 +234,3 @@ let simpl_intern expr withApp0 =
   let res = aux set ExprSet.empty in
   (* The result will be the "smallest" expression *)
   ExprSet.min_elt res
-
-let simpl expr = simpl_intern expr true
-
-let simpl_integ expr = simpl_intern expr false

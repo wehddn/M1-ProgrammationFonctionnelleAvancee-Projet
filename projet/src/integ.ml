@@ -152,13 +152,13 @@ let center_rectangles expr x a b =
    4 - application of midpoint rule
 *)
 let rec integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
-  let expr = simpl_integ expr in
+  let expr = simpl expr in
   let res = eval_primitive expr x a b in 
   match res with 
   | Some v -> v
   | None -> 
     let expr = local_eval expr in
-    let expr' = simpl_integ expr in
+    let expr' = simpl expr in
     let t = arith_tree expr' x in
     let restree = eval_tree t x a b true in 
     (match restree with
