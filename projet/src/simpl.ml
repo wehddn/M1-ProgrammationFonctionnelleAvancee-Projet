@@ -187,7 +187,7 @@ let simpl_intern expr withApp0 =
   *)
   let simplify expr withApp0 =
     let expr' = if withApp0 then simpl_eval expr else expr in
-    let expr' = simpl_arith expr in
+    let expr' = simpl_arith expr' in
     let expr' = simpl_trig expr' in
     if expr = expr' then expr else expr'
   in
