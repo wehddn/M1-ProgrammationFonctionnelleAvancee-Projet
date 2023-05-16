@@ -118,7 +118,7 @@ let print_menu lst () =
   print_endline "4. Dériver";
   print_endline "5. Intégrer";
   print_endline "6. Tracer";
-  print_endline "7. History";
+  print_endline "7. Historique";
   print_endline "0. Quitter"
 
 let handle_choice lst choice =
