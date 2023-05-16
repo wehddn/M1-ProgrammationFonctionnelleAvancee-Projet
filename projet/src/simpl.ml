@@ -54,6 +54,8 @@ let simpl_intern expr withApp0 =
 
     (* 0 / x = 0 *)
     | App2 (Div, e1, e2) when checkNum e1 0 && not (checkNum e2 0) -> Num 0
+
+    (* x / 0 -> error *)
     | App2 (Div, e1, e2) when checkNum e2 0 -> failwith "Division par 0"
 
     (* log(exp(x)) = x *)
