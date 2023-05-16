@@ -43,4 +43,50 @@ x+pi*sqrt(3)
 (x+(pi*sqrt(3)))
 ```
 
-A vous de proposer plus intéressant !
+
+# Fonctions implémentées
+
+## Évaluer
+Cette fonction évalue la valeur de l’expression sans variables.
+
+## Simplifier
+Cette fonction prend une expression et retourne une expression simplifiée.
+
+On crée récursivement toutes les variantes possibles d’expressions simplifiées et les stocke dans Set. Set est nécessaire pour contrôler des répétitions et pour ne pas faire des boucles.
+La simplification consiste à normaliser l’expression et à appliquer des règles arithmétiques et trigonométriques.
+
+*Les règles ne traitent pas tous les cas possibles, mais la structure créée permet de les ajouter facilement.*
+
+## Substituer
+Cette fonction remplace chaque occurrence d’une variable dans l’expression par une nouvelle expression.
+
+## Dériver
+Cette fonction permet de calculer la dérivée. On introduit l’expression et la variable par rapport à laquelle on dérive.
+
+Le principe c’est de faire des appels récursifs pour calculer les dérivées des sous expressions et les combiner selon les règles de dérivation.
+
+## Intégrer
+Cette fonction permet de calculer une intégrale définie de l'expression sur un segment.
+
+On applique successivement les différentes méthodes et s'arrête si la méthode a réussi à intégrer l’expression :
+* recherche d’une expression dans une table des primitives et application de théorème fondamental de l'analyse;
+* application des règles de linéarité et intégration récursive des opérandes obtenu;
+* integration par parties;
+* application de la méthode du point médian.
+
+*Dans la fonction décrite, l'intégration par partie ne gère pas la division.*
+
+*On n’a pas implémenté la méthode de remplacement de variable.*
+
+## Tracer
+Cette fonction permet de tracer une courbe correspondant à une expression avec une seule variable :
+
+* on introduit l’expression à tracer;
+* on introduit la variable de l’expression;
+* une fenêtre de dialogue s’affiche pour choisir si on veut introduire les intervalles des axes x et y, ou bien on garde les intervalles par défaut (-5,5)(-5,5);
+* si on choisit “o” (oui on veut des intervalles personnalisés), on introduira les valeurs x_min, x_max, y_min et y_max. ensuite le graph s’affiche dans ces intervalle;
+* sinon, le graph s’affiche dans l’intervalle par défaut.
+
+## Historique
+
+Cette fonction affiche les commandes précédentes et les résultats obtenus.
