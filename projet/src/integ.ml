@@ -11,8 +11,6 @@ open Derive
   integ f(x)dx from a to b = F(b) - F(a)   
 *)
 
-type integral = expr * string
-
 (* 
   We use this type to store different kinds of expressions together 
   For example, this will allow to store an expression during integration by parts, 
@@ -23,9 +21,10 @@ type node =
   | Error of expr                   (* Expressions that cannot be evaluated *)
   | Number of expr                  (* Float or integer numbers *)
   | Formule of expr                 (* Expressions that must be calculated by the formula *)
-  | Integral of integral
+  | Integral of expr * string       (* Integral, where the string stores a differentiable variable *)
   | Internal2 of op2 * node * node
 
+(* This type is used for integration in parts *)
 type trig = Sin | Cos | Tan | ASin | ACos | ATan
 
 let rec integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
@@ -85,23 +84,6 @@ and replace_minus expr =
   | _ -> expr
 in
 
-let rec node_to_string n =
-  match n with
-  | Error e -> 
-    "Error(" ^ (Syntax.to_string e) ^ ")"
-  | Number e ->
-    "Number(" ^ (Syntax.to_string e) ^ ")"
-  | Formule e ->
-    "Formule(" ^ (Syntax.to_string e) ^ ")"
-  | Integral i ->
-    "Integral(" ^ integral_to_string i ^ ")"
-  | Internal2 (op, n1, n2) ->
-    "Internal2(" ^ (Syntax.str2 op) ^ ", " ^ node_to_string n1 ^ ", " ^ node_to_string n2 ^ ")"
-
-and integral_to_string i =
-  let expr, str = i in (Syntax.to_string expr) ^ " d" ^ str 
-  in
-
 (* Application of the formula *)
 let formule pexpr (x : string) a b = 
   let saexpr = subst pexpr x a in
@@ -138,11 +120,6 @@ let rec eval_tree tree x a b arith =
     )
   in
 
-let parts_aux u dv = 
-  let du = derive u x in
-  let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
-  Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
-  in
 
 (* When integrating in parts, u is usually taken as such a function,
    which after differentiation will become simpler. Therefore, we do
@@ -173,6 +150,11 @@ let rec parts expr x =
     parts_aux e1 e2
     
   | _ -> Error expr
+
+  and parts_aux u dv = 
+  let du = derive u x in
+  let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
+  Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
   in
 
   let expr = simpl_integ expr in
