@@ -11,6 +11,14 @@ end)
 
 let simpl expr =
   let checkNum e n = if e = Num n || e = FloatNum (float_of_int n) then true else false
+in
+
+let issqrt e expr = 
+  let r = float_of_int (int_of_float (eval expr)) in
+  let r2 = r *. r in 
+  let sub = r2 -. eval e in
+  let ex = 0.00000001 in
+  sub < ex && sub > -.ex
   in
 
   (* List of arithmetic rules *)
@@ -119,6 +127,9 @@ let simpl expr =
     (* sqrt(x)^y = sqrt(x^y)*)
     | App2(Expo, App1(Sqrt, e1), e2) -> App1(Sqrt, App2(Expo, e1, e2))
 
+    (* sqrt (x) *)
+    | App1(Sqrt, e) when issqrt e expr -> FloatNum (eval expr)
+    
     | _ -> expr
   in
 
@@ -181,6 +192,27 @@ let simpl expr =
     (* (2*tan(x))/(1 - tan(x)^2) = tan(2*x) *)
     | App2(Div, App2(Mult, Num 2, App1(Tan, e1)), App2(Minus, Num 1, App2(Expo, App1(Tan, e2), Num 2))) 
       when e1 = e2 -> App1(Tan, App2(Mult, Num 2, e1))
+    
+    | App1(Sin, e) when checkNum e 0 -> Num 0
+    | App1(Sin, App2(Div, App0(Pi), e)) -> 
+      if checkNum e 6 then FloatNum 0.5 else
+        if checkNum e 4 then App2(Div, App1(Sqrt, Num 2), Num 2) else
+          if checkNum e 3 then App2(Div, App1(Sqrt, Num 3), Num 2) else
+            if checkNum e 2 then Num 1 else expr
+    
+    | App1(Cos, e) when checkNum e 0 -> Num 1
+    | App1(Cos, App2(Div, App0(Pi), e)) -> 
+      if checkNum e 6 then App2(Div, App1(Sqrt, Num 3), Num 2) else
+        if checkNum e 4 then App2(Div, App1(Sqrt, Num 2), Num 2) else
+          if checkNum e 3 then FloatNum 0.5 else
+            if checkNum e 2 then Num 0 else expr
+    
+    | App1(Tan, e) when checkNum e 0 -> Num 0
+    | App1(Tan, App2(Div, App0(Pi), e)) -> 
+      if checkNum e 6 then App2(Div, App1(Sqrt, Num 3), Num 3) else
+        if checkNum e 4 then Num 1 else
+          if checkNum e 3 then App1(Sqrt, Num 3) else
+            if checkNum e 2 then failwith "Tangent pi/2 is not defined" else expr
 
     | _ -> expr
   in
