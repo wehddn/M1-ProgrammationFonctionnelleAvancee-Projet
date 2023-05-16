@@ -3,13 +3,7 @@ open Norm
 open Eval
 open Set
 
-(*
-  The code consists of two main parts, the first one is a set of
-  simplification rules implemented in the simpl_arith, and the 
-  second one is a recursive application of the simplification 
-  rules to an expression.
-*)
-
+(* A module for using sets of expressions *)
 module ExprSet = Set.Make(struct
 type t = expr
 let compare = Norm.cmp
@@ -17,6 +11,7 @@ end)
 
 let simpl_intern expr withApp0 =
 
+  (* Simplifying expressions that can be evaluated *)
   let simpl_eval expr = 
     try FloatNum (eval expr) with | _ -> expr
   in
@@ -24,6 +19,7 @@ let simpl_intern expr withApp0 =
   let checkNum e n = if e = Num n || e = FloatNum (float_of_int n) then true else false
   in
 
+  (* List of arithmetic rules *)
   let simpl_arith expr =
     match expr with
     (* - - x = x *)
@@ -124,6 +120,7 @@ let simpl_intern expr withApp0 =
   let is_odd num = num mod 2 = 1
   in
 
+  (* List of trigonometric rules *)
   let simpl_trig expr =
     match expr with
     (* cos(x)^2+sin(x)^2 = 1 *)
@@ -132,7 +129,7 @@ let simpl_intern expr withApp0 =
     (* sin(x)/cos(x) = tan(x) *)
     | App2 (Div, App1 (Sin, e1), App1 (Cos, e2)) when e1 = e2 -> App1 (Tan, e1)
 
-    (* cos(a)*sin(b)+cos(b)*sin(a) = sin(a+b) a-b+b-a cos(a-b)*sin(b-a)+cos(b-a)*sin(a-b) *)
+    (* cos(a)*sin(b)+cos(b)*sin(a) = sin(a+b) *)
     | App2 (Plus, App2 (Mult, App1 (Cos, a1), App1 (Sin, b1)), App2 (Mult, App1 (Cos, b2), App1 (Sin, a2)))
       when a1 = a2 && b1 = b2 -> App1 (Sin, (App2 (Plus, a1, b1)))
 
@@ -207,23 +204,28 @@ let simpl_intern expr withApp0 =
   in
 
   (*
-    The function returns the smallest simplified expression
+    Function to search for all simplified variants.
   *)
-
-  let rec aux set set_processed =
+  let rec aux set set_processed = 
+    (* Add normalized variants of expressions to the original set excluding processed ones *)
     let set_norm = ExprSet.map (fun x -> norm x) set in
     let set_norm = ExprSet.diff set_norm set_processed in
     let set = ExprSet.union set set_norm in
+    (* Apply simplification to each expression and exclude the original and processed ones *)
     let set_simplify = ExprSet.map (fun x -> simpl_aux x withApp0) set  in
     let set_simplify = ExprSet.diff set_simplify set_norm in
     let set_simplify = ExprSet.diff set_simplify set_processed in
+    (* Add the original expressions to the processed ones *)
     let set_processed = ExprSet.union set_processed set in
+    (* If there are no normalized expressions left, return the processed ones,
+       otherwise continue simplifying *)
     if ExprSet.is_empty set_simplify then set_processed else aux set_simplify set_processed
   in
 
   let set = ExprSet.empty in
   let set = ExprSet.add expr set in
   let res = aux set ExprSet.empty in
+  (* The result will be the "smallest" expression *)
   ExprSet.min_elt res
 
 let simpl expr = simpl_intern expr true

@@ -50,7 +50,7 @@ let rec local_eval expr =
 
 
 (* Building a tree to apply the linearity rules 
-   (multiplication by a number and the sum of integrals) *)
+   (multiplication/division by a number and the sum of integrals) *)
 let rec arith_tree expr x =
   let expr = replace_minus expr in
   match expr with
@@ -130,6 +130,7 @@ and parts_aux u dv x =
   let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
   Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
 
+(* The midpoint rule, the segment is divided into 100 parts *)
 let center_rectangles expr x a b = 
   let aeval = eval a in
   let beval = eval b in
@@ -148,7 +149,7 @@ let center_rectangles expr x a b =
    1 - application of the antiderivative from the table for the simplest integrals
    2 - application of linearity rules and recursive integration
    3 - integration by parts
-   4 - integration by the midpoint rule
+   4 - application of midpoint rule
 *)
 let rec integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
   let expr = simpl_integ expr in
