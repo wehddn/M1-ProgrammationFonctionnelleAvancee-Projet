@@ -59,6 +59,11 @@ La simplification consiste à normaliser l’expression et à appliquer des règ
 
 ## Substituer
 Cette fonction remplace chaque occurrence d’une variable dans l’expression par une nouvelle expression.
+Elle parcourt récursivement une expression et effectue une substitution de la variable.
+- on introduit l’expression à substituer 
+- on introduit la variable à substituer
+- on introduit l’expression de substitution
+- le résultat s’affiche
 
 ## Dériver
 Cette fonction permet de calculer la dérivée. On introduit l’expression et la variable par rapport à laquelle on dérive.
