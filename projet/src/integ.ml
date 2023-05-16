@@ -27,8 +27,6 @@ type node =
 (* This type is used for integration in parts *)
 type trig = Sin | Cos | Tan | ASin | ACos | ATan
 
-let rec integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
-
 (* Local evaluation to eliminate arithmetic operations with constants *)
 let rec local_eval expr = 
   match expr with
@@ -49,9 +47,9 @@ let rec local_eval expr =
                 with | _ -> (try
                               FloatNum (eval (App2(op, e1, e2localeval)))
                             with | _ -> App2(op, e1localeval, e2localeval))))
-  in
 
-(* Building a tree to apply the linearity rule 
+
+(* Building a tree to apply the linearity rules 
    (multiplication by a number and the sum of integrals) *)
 let rec arith_tree expr x =
   let expr = replace_minus expr in
@@ -82,14 +80,12 @@ and replace_minus expr =
   match expr with
   | App2 (Minus, e1, e2) -> App2 (Plus, replace_minus e1, App1 (UMinus, replace_minus e2))
   | _ -> expr
-in
 
 (* Application of the formula *)
 let formule pexpr (x : string) a b = 
   let saexpr = subst pexpr x a in
   let sbexpr = subst pexpr x b in
   eval sbexpr -. eval saexpr 
-in
 
 (* Application of the antiderivative from the table *)
 let eval_primitive expr x a b =
@@ -98,9 +94,82 @@ let eval_primitive expr x a b =
   | _ ->
   let pexpr = primitive expr (Light.(Var x)) in
   if expr <> pexpr || expr == Light.(e ^ Var "x") then Some (formule pexpr x a b) else None
-in
 
-let rec eval_tree tree x a b arith = 
+(* When integrating in parts, u is usually taken as such a function,
+   which after differentiation will become simpler. Therefore, we do
+   not just apply the method, but consider various expressions. *)
+let rec parts expr x =
+  match expr with 
+  (* expressions with log *)
+  | App1 (Log, e) when Syntax.to_string e = x ->
+    parts (App2 (Mult, Num 1, App1 (Log, e))) x
+  | App2 (Mult, e1, App1 (Log, e2))
+  | App2 (Mult, App1 (Log, e2), e1) ->
+    parts_aux (App1 (Log, e2)) e1 x
+
+  (* expressions with e^x *)
+  | App2 (Mult, e1, App2(Expo, App0(E), e2))
+  | App2 (Mult, App2(Expo, App0(E), e2), e1) ->
+    parts_aux e1 (App2(Expo, App0(E), e2)) x
+  
+  (* expressions with trig *)
+  | App1 (trig, e) when Syntax.to_string e = x ->
+    parts (App2 (Mult, Num 1, App1 (trig, e))) x
+  | App2 (Mult, e1, App1(trig, e2))
+  | App2 (Mult, App1(trig, e2), e1) ->
+    parts_aux e1 (App1(trig, e2)) x
+    
+  (* other expressions *)
+  | App2 (Mult, e1, e2) ->
+    parts_aux e1 e2 x
+    
+  | _ -> Error expr
+
+and parts_aux u dv x = 
+  let du = derive u x in
+  let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
+  Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
+
+let center_rectangles expr x a b = 
+  let aeval = eval a in
+  let beval = eval b in
+  let n = 100 in
+  let h = (beval -. aeval) /. (float_of_int n) in
+  let rec aux i sum = 
+    if i > n then sum else
+      (let v = aeval +. ((float_of_int i) -. 0.5) *. h in
+      let y = eval (subst expr x (FloatNum v)) in
+      aux (i + 1) (sum +. y)) in
+  let res = h *. (aux 1 0.0) in
+  res
+
+(* In this function, we consistently apply various integration methods, from the simplest ones.
+   If the method does not return a value, the following applies.
+   1 - application of the antiderivative from the table for the simplest integrals
+   2 - application of linearity rules and recursive integration
+   3 - integration by parts
+   4 - integration by the midpoint rule
+*)
+let rec integ (expr : expr) (x : string) (a : expr) (b : expr) : float =
+  let expr = simpl_integ expr in
+  let res = eval_primitive expr x a b in 
+  match res with 
+  | Some v -> v
+  | None -> 
+    let expr = local_eval expr in
+    let expr' = simpl_integ expr in
+    let t = arith_tree expr' x in
+    let restree = eval_tree t x a b true in 
+    (match restree with
+    | Some v -> v 
+    | None -> 
+    let p = parts expr x in
+    let resp = eval_tree p x a b false in 
+    (match resp with
+    | Some v -> v 
+    | None -> center_rectangles expr x a b))
+
+and eval_tree tree x a b arith = 
   match tree with
   | Error _ -> None
   | Number e -> let l = eval_primitive e x a b in
@@ -118,71 +187,3 @@ let rec eval_tree tree x a b arith =
       Some (eval (App2(op, FloatNum x, FloatNum y)))
     | _ -> None 
     )
-  in
-
-
-(* When integrating in parts, u is usually taken as such a function,
-   which after differentiation will become simpler. Therefore, we do
-   not just apply the method, but consider various expressions. *)
-let rec parts expr x =
-  match expr with 
-  (* expressions with log *)
-  | App1 (Log, e) when Syntax.to_string e = x ->
-    parts (App2 (Mult, Num 1, App1 (Log, e))) x
-  | App2 (Mult, e1, App1 (Log, e2))
-  | App2 (Mult, App1 (Log, e2), e1) ->
-    parts_aux (App1 (Log, e2)) e1
-
-  (* expressions with e^x *)
-  | App2 (Mult, e1, App2(Expo, App0(E), e2))
-  | App2 (Mult, App2(Expo, App0(E), e2), e1) ->
-    parts_aux e1 (App2(Expo, App0(E), e2))
-  
-  (* expressions with trig *)
-  | App1 (trig, e) when Syntax.to_string e = x ->
-    parts (App2 (Mult, Num 1, App1 (trig, e))) x
-  | App2 (Mult, e1, App1(trig, e2))
-  | App2 (Mult, App1(trig, e2), e1) ->
-    parts_aux e1 (App1(trig, e2))
-    
-  (* other expressions *)
-  | App2 (Mult, e1, e2) ->
-    parts_aux e1 e2
-    
-  | _ -> Error expr
-
-  and parts_aux u dv = 
-  let du = derive u x in
-  let v = primitive dv (Light.(Var x)) in (*TODO integrate *)
-  Internal2 (Minus, Formule (App2(Mult, u, v)), Integral (App2(Mult, v, du), x))
-  in
-
-  let expr = simpl_integ expr in
-  let res = eval_primitive expr x a b in 
-  match res with 
-  | Some v -> v
-  | None -> 
-    let expr = local_eval expr in
-    let expr' = simpl_integ expr in
-    let t = arith_tree expr' x in
-    let restree = eval_tree t x a b true in 
-    (match restree with
-    | Some v -> v 
-    | None -> 
-    let p = parts expr x in
-    let resp = eval_tree p x a b false in 
-    (match resp with
-    | Some v -> v 
-    | None -> 
-      let aeval = eval a in
-      let beval = eval b in
-      let n = 100 in
-      let h = (beval -. aeval) /. (float_of_int n) in
-      let rec left_rectangles i sum = 
-        if i > n then sum else
-          (let v = aeval +. ((float_of_int i) -. 0.5) *. h in
-          let y = eval (subst expr x (FloatNum v)) in
-          left_rectangles (i + 1) (sum +. y)) in
-        let res = h *. (left_rectangles 1 0.0) in
-        res
-        ))
