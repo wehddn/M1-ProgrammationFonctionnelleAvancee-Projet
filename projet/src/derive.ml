@@ -1,7 +1,5 @@
 open Syntax
-open Eval
 open Simpl
-open Subst
 
 let rec derive_aux e x =
   match e with

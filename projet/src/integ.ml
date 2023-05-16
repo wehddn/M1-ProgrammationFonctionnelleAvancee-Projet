@@ -3,7 +3,6 @@ open Primitive
 open Subst
 open Eval
 open Simpl
-open Norm
 open Derive
 
 (*

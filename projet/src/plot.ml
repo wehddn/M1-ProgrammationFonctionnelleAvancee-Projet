@@ -1,8 +1,6 @@
 open Syntax
 open Eval
-open Simpl
 open Subst
-open Derive
 open Graphics
 
 let plot_expression expr var x_min x_max y_min y_max=
