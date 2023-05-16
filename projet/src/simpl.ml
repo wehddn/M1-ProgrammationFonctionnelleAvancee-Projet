@@ -3,27 +3,25 @@ open Norm
 open Eval
 open Set
 
-(*
-  The code consists of two main parts, the first one is a set of
-  simplification rules implemented in the simpl_arith, and the 
-  second one is a recursive application of the simplification 
-  rules to an expression.
-*)
-
+(* A module for using sets of expressions *)
 module ExprSet = Set.Make(struct
 type t = expr
 let compare = Norm.cmp
 end)
 
-let simpl_intern expr withApp0 =
-
-  let simpl_eval expr = 
-    try FloatNum (eval expr) with | _ -> expr
-  in
-
+let simpl expr =
   let checkNum e n = if e = Num n || e = FloatNum (float_of_int n) then true else false
+in
+
+let issqrt e expr = 
+  let r = float_of_int (int_of_float (eval expr)) in
+  let r2 = r *. r in 
+  let sub = r2 -. eval e in
+  let ex = 0.00000001 in
+  sub < ex && sub > -.ex
   in
 
+  (* List of arithmetic rules *)
   let simpl_arith expr =
     match expr with
     (* - - x = x *)
@@ -56,9 +54,14 @@ let simpl_intern expr withApp0 =
     (* x / 1 = x *)
     | App2 (Div, e1, e2) when checkNum e2 1 -> e1
 
-    (* 0 / x = 0 *)
-    | App2 (Div, e1, e2) when checkNum e1 0 && not (checkNum e2 0) -> Num 0
+    (* x / 0 -> error *)
     | App2 (Div, e1, e2) when checkNum e2 0 -> failwith "Division par 0"
+
+    (* 0 / x = 0 *)
+    | App2 (Div, e1, e2) when checkNum e1 0 -> Num 0
+
+    (* x / x = 1 *)
+    | App2 (Div, e1, e2) when e1 = e2 -> Num 1
 
     (* log(exp(x)) = x *)
     | App1 (Log, App1 (Exp, e)) -> e
@@ -115,6 +118,18 @@ let simpl_intern expr withApp0 =
     | App2(Expo, App2(Expo, e1, e2), e3)
     | App2(Expo, e1, App2(Expo, e2, e3)) -> App2(Expo, e1, App2(Mult, e2, e3))
 
+    (* sqrt(a) * sqrt(b) = sqrt(a*b) *)
+    | App2(Mult, App1(Sqrt, e1), App1(Sqrt, e2)) -> App1(Sqrt, App2(Mult, e1, e2))
+
+    (* sqrt(a) / sqrt(b) = sqrt(a/b) *)
+    | App2(Div, App1(Sqrt, e1), App1(Sqrt, e2)) -> App1(Sqrt, App2(Div, e1, e2))
+
+    (* sqrt(x)^y = sqrt(x^y)*)
+    | App2(Expo, App1(Sqrt, e1), e2) -> App1(Sqrt, App2(Expo, e1, e2))
+
+    (* sqrt (x) *)
+    | App1(Sqrt, e) when issqrt e expr -> FloatNum (eval expr)
+    
     | _ -> expr
   in
 
@@ -124,6 +139,7 @@ let simpl_intern expr withApp0 =
   let is_odd num = num mod 2 = 1
   in
 
+  (* List of trigonometric rules *)
   let simpl_trig expr =
     match expr with
     (* cos(x)^2+sin(x)^2 = 1 *)
@@ -132,7 +148,7 @@ let simpl_intern expr withApp0 =
     (* sin(x)/cos(x) = tan(x) *)
     | App2 (Div, App1 (Sin, e1), App1 (Cos, e2)) when e1 = e2 -> App1 (Tan, e1)
 
-    (* cos(a)*sin(b)+cos(b)*sin(a) = sin(a+b) a-b+b-a cos(a-b)*sin(b-a)+cos(b-a)*sin(a-b) *)
+    (* cos(a)*sin(b)+cos(b)*sin(a) = sin(a+b) *)
     | App2 (Plus, App2 (Mult, App1 (Cos, a1), App1 (Sin, b1)), App2 (Mult, App1 (Cos, b2), App1 (Sin, a2)))
       when a1 = a2 && b1 = b2 -> App1 (Sin, (App2 (Plus, a1, b1)))
 
@@ -176,6 +192,27 @@ let simpl_intern expr withApp0 =
     (* (2*tan(x))/(1 - tan(x)^2) = tan(2*x) *)
     | App2(Div, App2(Mult, Num 2, App1(Tan, e1)), App2(Minus, Num 1, App2(Expo, App1(Tan, e2), Num 2))) 
       when e1 = e2 -> App1(Tan, App2(Mult, Num 2, e1))
+    
+    | App1(Sin, e) when checkNum e 0 -> Num 0
+    | App1(Sin, App2(Div, App0(Pi), e)) -> 
+      if checkNum e 6 then FloatNum 0.5 else
+        if checkNum e 4 then App2(Div, App1(Sqrt, Num 2), Num 2) else
+          if checkNum e 3 then App2(Div, App1(Sqrt, Num 3), Num 2) else
+            if checkNum e 2 then Num 1 else expr
+    
+    | App1(Cos, e) when checkNum e 0 -> Num 1
+    | App1(Cos, App2(Div, App0(Pi), e)) -> 
+      if checkNum e 6 then App2(Div, App1(Sqrt, Num 3), Num 2) else
+        if checkNum e 4 then App2(Div, App1(Sqrt, Num 2), Num 2) else
+          if checkNum e 3 then FloatNum 0.5 else
+            if checkNum e 2 then Num 0 else expr
+    
+    | App1(Tan, e) when checkNum e 0 -> Num 0
+    | App1(Tan, App2(Div, App0(Pi), e)) -> 
+      if checkNum e 6 then App2(Div, App1(Sqrt, Num 3), Num 3) else
+        if checkNum e 4 then Num 1 else
+          if checkNum e 3 then App1(Sqrt, Num 3) else
+            if checkNum e 2 then failwith "Tangent pi/2 is not defined" else expr
 
     | _ -> expr
   in
@@ -185,21 +222,20 @@ let simpl_intern expr withApp0 =
     returns the simplified expression if any simplification was 
     performed.
   *)
-  let simplify expr withApp0 =
-    let expr' = if withApp0 then simpl_eval expr else expr in
+  let simplify expr  =
     let expr' = simpl_arith expr in
     let expr' = simpl_trig expr' in
     if expr = expr' then expr else expr'
   in
 
-  let rec simpl_aux expr withApp0 = 
+  let rec simpl_aux expr  = 
     match expr with
     | Num _ -> expr
     | FloatNum _ -> expr
     | Var _ -> expr
     | App0 _ -> expr 
-    | App1 (op, e) -> App1 (op, simpl_aux e withApp0)
-    | App2 (op, e1, e2) -> simplify (App2 (op, simpl_aux (simplify e1 withApp0) withApp0, simpl_aux (simplify e2 withApp0) withApp0)) withApp0
+    | App1 (op, e) -> simplify (App1 (op, simpl_aux e))
+    | App2 (op, e1, e2) -> simplify (App2 (op, simpl_aux (simplify e1), simpl_aux (simplify e2))) 
   in
 
   let diff2 set set1 set2 =
@@ -207,25 +243,26 @@ let simpl_intern expr withApp0 =
   in
 
   (*
-    The function returns the smallest simplified expression
+    Function to search for all simplified variants.
   *)
-
-  let rec aux set set_processed =
+  let rec aux set set_processed = 
+    (* Add normalized variants of expressions to the original set excluding processed ones *)
     let set_norm = ExprSet.map (fun x -> norm x) set in
     let set_norm = ExprSet.diff set_norm set_processed in
     let set = ExprSet.union set set_norm in
-    let set_simplify = ExprSet.map (fun x -> simpl_aux x withApp0) set  in
+    (* Apply simplification to each expression and exclude the original and processed ones *)
+    let set_simplify = ExprSet.map (fun x -> simpl_aux x ) set  in
     let set_simplify = ExprSet.diff set_simplify set_norm in
     let set_simplify = ExprSet.diff set_simplify set_processed in
+    (* Add the original expressions to the processed ones *)
     let set_processed = ExprSet.union set_processed set in
+    (* If there are no normalized expressions left, return the processed ones,
+       otherwise continue simplifying *)
     if ExprSet.is_empty set_simplify then set_processed else aux set_simplify set_processed
   in
 
   let set = ExprSet.empty in
   let set = ExprSet.add expr set in
   let res = aux set ExprSet.empty in
+  (* The result will be the "smallest" expression *)
   ExprSet.min_elt res
-
-let simpl expr = simpl_intern expr true
-
-let simpl_integ expr = simpl_intern expr false
