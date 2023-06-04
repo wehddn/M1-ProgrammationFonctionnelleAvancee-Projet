@@ -32,17 +32,7 @@ compiler en lançant `make` dans le répertoire actuel `projet`, ce qui lancera 
 avec les bons arguments (voir le fichier [Makefile](Makefile) pour plus de détails).
 
 Ensuite, le petit script fourni `run` facilite ensuite le lancement du
-binaire obtenu (`dune exec` avec les bons arguments). Pour l'instant,
-le code principal lit une expression algébrique sur l'entrée standard,
-la transforme en donnée OCaml de type `Syntax.expr`, puis la réaffiche
-(voir [src/calc.ml](src/calc.ml)). Par exemple:
-
-```sh
-% ./run
-x+pi*sqrt(3)
-(x+(pi*sqrt(3)))
-```
-
+binaire obtenu (`dune exec` avec les bons arguments).
 
 # Fonctions implémentées
 
